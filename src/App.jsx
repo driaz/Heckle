@@ -38,8 +38,9 @@ function Player() {
       jumpVel={4}
       sprintMult={1.6}
       position={[0, 2, 0]}
+      camInitDir={{ x: 0, y: -3 * Math.PI / 4 }}
       disableFollowCam
-      disableFollowCamPos={{ x: 10, y: 10, z: 10 }}
+      disableFollowCamPos={{ x: 15, y: 15, z: 15 }}
       disableFollowCamTarget={{ x: 0, y: 0, z: 0 }}
     >
       {/* Placeholder character — capsule with eyes */}
