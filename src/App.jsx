@@ -8,6 +8,7 @@ import Atmosphere from './components/Atmosphere'
 import Platforms from './components/Platforms'
 import Stars from './components/Stars'
 import HUD from './components/HUD'
+import GamepadController from './systems/GamepadController'
 
 function Player() {
   const ecctrlRef = useRef()
@@ -61,6 +62,7 @@ function App() {
     <KeyboardControls map={keyboardMap}>
       <Canvas shadows camera={{ fov: 45 }}>
         <Suspense fallback={null}>
+          <GamepadController />
           <Physics gravity={[0, -9.81, 0]} timeStep={1 / 60} interpolate>
             <Platforms />
             <Player />
