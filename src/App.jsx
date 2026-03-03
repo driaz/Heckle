@@ -1,9 +1,11 @@
-import { Suspense } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Suspense, useRef } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { KeyboardControls } from '@react-three/drei'
 import { Physics, RigidBody } from '@react-three/rapier'
 import Ecctrl from 'ecctrl'
 import { keyboardMap } from './config/controls'
+import { playerPosition } from './lib/playerPosition'
+import IsometricCamera from './components/IsometricCamera'
 
 function Ground() {
   return (
@@ -17,8 +19,18 @@ function Ground() {
 }
 
 function Player() {
+  const ecctrlRef = useRef()
+
+  useFrame(() => {
+    if (ecctrlRef.current) {
+      const pos = ecctrlRef.current.group.translation()
+      playerPosition.set(pos.x, pos.y, pos.z)
+    }
+  })
+
   return (
     <Ecctrl
+      ref={ecctrlRef}
       capsuleHalfHeight={0.35}
       capsuleRadius={0.3}
       floatHeight={0.1}
@@ -64,12 +76,13 @@ function App() {
     <KeyboardControls map={keyboardMap}>
       <Canvas
         shadows
-        camera={{ position: [10, 10, 10], fov: 35 }}
+        camera={{ position: [15, 15, 15], fov: 35 }}
       >
         <Suspense fallback={null}>
           <Physics gravity={[0, -9.81, 0]}>
             <Ground />
             <Player />
+            <IsometricCamera />
             <ambientLight intensity={0.5} />
             <directionalLight position={[10, 15, 8]} intensity={1.2} castShadow />
           </Physics>
