@@ -28,3 +28,14 @@ export const PLATFORMS = [
   { pos: [15, 1.5, 0], size: [3, 0.6, 3], color: COLORS.platform },
   { pos: [18, 2.0, 2], size: [4, 0.8, 4], color: COLORS.accent },
 ]
+
+// Star positions — ~1.5 units above each platform surface
+export const STARS = [
+  [1, 1.5, 1],       // starting island freebie
+  [-3, 2.3, 5],      // stepping stone 1
+  [-3, 4.8, 11],     // stepping stone 3
+  [1, 7.3, 17],      // stepping stone 5
+  [0, 8.4, 21],      // upper plateau goal
+  [9, 2.3, 0],       // side path 2
+  [18, 3.9, 2],      // side path end
+]

@@ -9,6 +9,8 @@ import { playerPosition } from './lib/playerPosition'
 import IsometricCamera from './components/IsometricCamera'
 import Atmosphere from './components/Atmosphere'
 import Platforms from './components/Platforms'
+import Stars from './components/Stars'
+import HUD from './components/HUD'
 
 const _worldPos = new THREE.Vector3()
 
@@ -80,10 +82,12 @@ function App() {
             <Platforms />
             <Player />
             <IsometricCamera />
+            <Stars />
             <Atmosphere />
           </Physics>
         </Suspense>
       </Canvas>
+      <HUD />
     </KeyboardControls>
   )
 }
