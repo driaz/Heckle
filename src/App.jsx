@@ -6,6 +6,7 @@ import Ecctrl from 'ecctrl'
 import { keyboardMap } from './config/controls'
 import { playerPosition } from './lib/playerPosition'
 import IsometricCamera from './components/IsometricCamera'
+import Atmosphere from './components/Atmosphere'
 
 function Ground() {
   return (
@@ -84,8 +85,7 @@ function App() {
             <Ground />
             <Player />
             <IsometricCamera />
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[10, 15, 8]} intensity={1.2} castShadow />
+            <Atmosphere />
           </Physics>
         </Suspense>
       </Canvas>
