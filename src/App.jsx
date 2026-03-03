@@ -2,6 +2,7 @@ import { Suspense, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { KeyboardControls } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
+import * as THREE from 'three'
 import Ecctrl from 'ecctrl'
 import { keyboardMap } from './config/controls'
 import { playerPosition } from './lib/playerPosition'
@@ -9,13 +10,17 @@ import IsometricCamera from './components/IsometricCamera'
 import Atmosphere from './components/Atmosphere'
 import Platforms from './components/Platforms'
 
+const _worldPos = new THREE.Vector3()
+
 function Player() {
   const ecctrlRef = useRef()
+  const meshRef = useRef()
 
   useFrame(() => {
-    if (ecctrlRef.current) {
-      const pos = ecctrlRef.current.group.translation()
-      playerPosition.set(pos.x, pos.y, pos.z)
+    // Read from the visual mesh (interpolated) rather than the physics body
+    if (meshRef.current) {
+      meshRef.current.getWorldPosition(_worldPos)
+      playerPosition.copy(_worldPos)
     }
   })
 
@@ -35,7 +40,7 @@ function Player() {
       disableFollowCamTarget={{ x: 0, y: 0, z: 0 }}
     >
       {/* Placeholder character — capsule with eyes */}
-      <group>
+      <group ref={meshRef}>
         <mesh castShadow position={[0, 0.3, 0]}>
           <capsuleGeometry args={[0.3, 0.5, 8, 16]} />
           <meshToonMaterial color="#e07050" />
@@ -71,7 +76,7 @@ function App() {
         camera={{ position: [15, 15, 15], fov: 35 }}
       >
         <Suspense fallback={null}>
-          <Physics gravity={[0, -9.81, 0]}>
+          <Physics gravity={[0, -9.81, 0]} timeStep={1 / 60} interpolate>
             <Platforms />
             <Player />
             <IsometricCamera />
