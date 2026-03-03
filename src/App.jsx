@@ -1,23 +1,13 @@
 import { Suspense, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { KeyboardControls } from '@react-three/drei'
-import { Physics, RigidBody } from '@react-three/rapier'
+import { Physics } from '@react-three/rapier'
 import Ecctrl from 'ecctrl'
 import { keyboardMap } from './config/controls'
 import { playerPosition } from './lib/playerPosition'
 import IsometricCamera from './components/IsometricCamera'
 import Atmosphere from './components/Atmosphere'
-
-function Ground() {
-  return (
-    <RigidBody type="fixed">
-      <mesh position={[0, -0.5, 0]} receiveShadow>
-        <boxGeometry args={[8, 1, 8]} />
-        <meshToonMaterial color="#5b8c5a" />
-      </mesh>
-    </RigidBody>
-  )
-}
+import Platforms from './components/Platforms'
 
 function Player() {
   const ecctrlRef = useRef()
@@ -82,7 +72,7 @@ function App() {
       >
         <Suspense fallback={null}>
           <Physics gravity={[0, -9.81, 0]}>
-            <Ground />
+            <Platforms />
             <Player />
             <IsometricCamera />
             <Atmosphere />
