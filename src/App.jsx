@@ -43,7 +43,7 @@ function Player() {
       camInitDir={{ x: 0.3, y: 0 }}
     >
       <EcctrlAnimation animationSet={animationSet} characterURL={characterURL}>
-        <CharacterModel position={[0, -0.65, 0]} />
+        <CharacterModel position={[0, -0.75, 0]} />
       </EcctrlAnimation>
     </Ecctrl>
   )
