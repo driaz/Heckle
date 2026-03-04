@@ -25,14 +25,22 @@ export default function GamepadController() {
   const jumpWasPressed = useRef(false)
   const hadGamepad = useRef(false)
 
-  // Log connection / disconnection; release all input on disconnect or unmount
   useEffect(() => {
-    const onConnect = (e) =>
+    // stopImmediatePropagation prevents ecctrl's built-in gamepad handler
+    // from activating. Ecctrl's handler has NO deadzone (triggers on any
+    // non-zero axis value), which causes drift from physical stick noise.
+    // Our handler registered first (earlier in the component tree) takes
+    // full control with proper deadzone filtering.
+    const onConnect = (e) => {
+      e.stopImmediatePropagation()
       console.log(`Gamepad connected: ${e.gamepad.id}`)
+    }
     const onDisconnect = (e) => {
+      e.stopImmediatePropagation()
       console.log(`Gamepad disconnected: ${e.gamepad.id}`)
       resetInput()
       hadGamepad.current = false
+      jumpWasPressed.current = false
     }
 
     window.addEventListener('gamepadconnected', onConnect)
@@ -66,25 +74,25 @@ export default function GamepadController() {
     hadGamepad.current = true
 
     // --- Left stick → ecctrl joystick store ---
+    // Apply deadzone per-axis first, then compute polar coordinates
     const rawX = gp.axes[0]
     const rawY = gp.axes[1]
     const x = Math.abs(rawX) < DEADZONE ? 0 : rawX
     const y = Math.abs(rawY) < DEADZONE ? 0 : -rawY // invert Y: gamepad down=+1, ecctrl expects up=+1
 
-    const dist = Math.min(Math.sqrt(x * x + y * y), 1)
-
-    if (dist > DEADZONE) {
-      // Convert to angle in [0, 2π] matching ecctrl's convention
-      // (0 = right, π/2 = forward, π = left, 3π/2 = backward)
+    if (Math.abs(x) > 0 || Math.abs(y) > 0) {
+      // Stick is outside deadzone — compute distance and angle
+      const dist = Math.min(Math.sqrt(x * x + y * y), 1)
       let angle = Math.atan2(y, x)
       if (angle < 0) angle += 2 * Math.PI
       const isRunning = gp.buttons[4]?.pressed || false // L1 = sprint
       setJoystick(dist, angle, isRunning)
     } else {
+      // Stick is at rest — always reset
       resetJoystick()
     }
 
-    // --- Jump: Cross (button 0) → button1 ---
+    // --- Jump: Cross (button 0) → button1 (completely independent of stick) ---
     const jumpPressed = gp.buttons[0]?.pressed || false
     if (jumpPressed && !jumpWasPressed.current) {
       pressButton1()
