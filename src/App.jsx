@@ -1,9 +1,10 @@
-import { Suspense, useRef } from 'react'
+import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { KeyboardControls } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
 import Ecctrl from 'ecctrl'
 import { keyboardMap } from './config/controls'
+import { ecctrlRef } from './lib/ecctrlRef'
 import Atmosphere from './components/Atmosphere'
 import Platforms from './components/Platforms'
 import Stars from './components/Stars'
@@ -11,8 +12,6 @@ import HUD from './components/HUD'
 import GamepadController from './systems/GamepadController'
 
 function Player() {
-  const ecctrlRef = useRef()
-
   return (
     <Ecctrl
       ref={ecctrlRef}
