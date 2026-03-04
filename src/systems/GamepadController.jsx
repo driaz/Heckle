@@ -1,48 +1,38 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { useJoystickControls } from 'ecctrl'
 
 const DEADZONE = 0.15
 
-const applyDeadzone = (value, threshold = DEADZONE) =>
-  Math.abs(value) < threshold ? 0 : value
-
-// Button indices → key codes (standard mapping)
-const BUTTON_MAP = [
-  { index: 0, code: 'Space' },      // Cross (X) → jump
-  { index: 4, code: 'ShiftLeft' },  // L1 → sprint
-]
+/**
+ * Resets all gamepad-driven input in ecctrl's joystick store.
+ * Safe to call from anywhere — uses zustand's static setState.
+ */
+const resetInput = () =>
+  useJoystickControls.setState({
+    curJoystickDis: 0,
+    curJoystickAng: 0,
+    curRunState: false,
+    curButton1Pressed: false,
+  })
 
 export default function GamepadController() {
-  const activeKeys = useRef(new Set())
+  // Grab stable references to store actions (won't cause re-renders)
+  const setJoystick = useJoystickControls((s) => s.setJoystick)
+  const resetJoystick = useJoystickControls((s) => s.resetJoystick)
+  const pressButton1 = useJoystickControls((s) => s.pressButton1)
 
-  function pressKey(code) {
-    if (!activeKeys.current.has(code)) {
-      activeKeys.current.add(code)
-      document.dispatchEvent(new KeyboardEvent('keydown', { code, bubbles: true }))
-    }
-  }
+  const jumpWasPressed = useRef(false)
+  const hadGamepad = useRef(false)
 
-  function releaseKey(code) {
-    if (activeKeys.current.has(code)) {
-      activeKeys.current.delete(code)
-      document.dispatchEvent(new KeyboardEvent('keyup', { code, bubbles: true }))
-    }
-  }
-
-  const releaseAll = useCallback(() => {
-    for (const code of activeKeys.current) {
-      document.dispatchEvent(new KeyboardEvent('keyup', { code, bubbles: true }))
-    }
-    activeKeys.current.clear()
-  }, [])
-
-  // Log connection / disconnection; release all keys on disconnect
+  // Log connection / disconnection; release all input on disconnect or unmount
   useEffect(() => {
     const onConnect = (e) =>
       console.log(`Gamepad connected: ${e.gamepad.id}`)
     const onDisconnect = (e) => {
       console.log(`Gamepad disconnected: ${e.gamepad.id}`)
-      releaseAll()
+      resetInput()
+      hadGamepad.current = false
     }
 
     window.addEventListener('gamepadconnected', onConnect)
@@ -50,9 +40,9 @@ export default function GamepadController() {
     return () => {
       window.removeEventListener('gamepadconnected', onConnect)
       window.removeEventListener('gamepaddisconnected', onDisconnect)
-      releaseAll()
+      resetInput()
     }
-  }, [releaseAll])
+  }, [])
 
   useFrame(() => {
     const gamepads = navigator.getGamepads()
@@ -63,25 +53,46 @@ export default function GamepadController() {
         break
       }
     }
-    if (!gp) return
 
-    // --- Axes (left stick) ---
-    const lx = applyDeadzone(gp.axes[0])
-    const ly = applyDeadzone(gp.axes[1])
-
-    // Left / right
-    if (lx < -DEADZONE) pressKey('KeyA'); else releaseKey('KeyA')
-    if (lx > DEADZONE)  pressKey('KeyD'); else releaseKey('KeyD')
-
-    // Forward / back
-    if (ly < -DEADZONE) pressKey('KeyW'); else releaseKey('KeyW')
-    if (ly > DEADZONE)  pressKey('KeyS'); else releaseKey('KeyS')
-
-    // --- Buttons ---
-    for (const { index, code } of BUTTON_MAP) {
-      if (gp.buttons[index].pressed) pressKey(code)
-      else releaseKey(code)
+    if (!gp) {
+      // Gamepad disappeared without disconnect event — clean up
+      if (hadGamepad.current) {
+        resetInput()
+        hadGamepad.current = false
+        jumpWasPressed.current = false
+      }
+      return
     }
+    hadGamepad.current = true
+
+    // --- Left stick → ecctrl joystick store ---
+    const rawX = gp.axes[0]
+    const rawY = gp.axes[1]
+    const x = Math.abs(rawX) < DEADZONE ? 0 : rawX
+    const y = Math.abs(rawY) < DEADZONE ? 0 : -rawY // invert Y: gamepad down=+1, ecctrl expects up=+1
+
+    const dist = Math.min(Math.sqrt(x * x + y * y), 1)
+
+    if (dist > DEADZONE) {
+      // Convert to angle in [0, 2π] matching ecctrl's convention
+      // (0 = right, π/2 = forward, π = left, 3π/2 = backward)
+      let angle = Math.atan2(y, x)
+      if (angle < 0) angle += 2 * Math.PI
+      const isRunning = gp.buttons[4]?.pressed || false // L1 = sprint
+      setJoystick(dist, angle, isRunning)
+    } else {
+      resetJoystick()
+    }
+
+    // --- Jump: Cross (button 0) → button1 ---
+    const jumpPressed = gp.buttons[0]?.pressed || false
+    if (jumpPressed && !jumpWasPressed.current) {
+      pressButton1()
+    } else if (!jumpPressed && jumpWasPressed.current) {
+      // No individual releaseButton1() in the store — use setState directly
+      useJoystickControls.setState({ curButton1Pressed: false })
+    }
+    jumpWasPressed.current = jumpPressed
   })
 
   return null
