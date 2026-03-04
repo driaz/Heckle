@@ -10,6 +10,7 @@ const config = {
   speechConfig: {
     voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Charon' } },
   },
+  outputAudioTranscription: {},
   systemInstruction: `You are the narrator of a platformer video game called Heckle. You are a witty, sarcastic heckler who watches the player's every move and comments on it.
 
 Your style:
@@ -80,6 +81,9 @@ async function connect() {
               queueAudioChunk(part.inlineData.data)
             }
           }
+        }
+        if (message.serverContent?.outputTranscription?.text) {
+          console.log('[Narrator] said:', message.serverContent.outputTranscription.text)
         }
         if (message.serverContent?.turnComplete) {
           console.log('[Narrator] Turn complete')
