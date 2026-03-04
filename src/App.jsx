@@ -12,6 +12,7 @@ import FallDetector from './components/FallDetector'
 import CharacterModel from './components/CharacterModel'
 import HUD from './components/HUD'
 import GamepadController from './systems/GamepadController'
+import AudioManager from './systems/AudioManager'
 
 const animationSet = {
   idle: 'Idle',
@@ -86,6 +87,7 @@ function App() {
         </Suspense>
       </Canvas>
       <HUD />
+      <AudioManager />
     </KeyboardControls>
   )
 }
