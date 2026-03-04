@@ -19,7 +19,9 @@ export default function FallDetector() {
       if (now - lastRespawn.current < COOLDOWN_MS) return
       lastRespawn.current = now
 
-      useGameStore.getState().recordFall()
+      const store = useGameStore.getState()
+      store.recordFall(pos)
+      store.recordRespawn()
 
       body.setTranslation(
         { x: SPAWN_POINT[0], y: SPAWN_POINT[1], z: SPAWN_POINT[2] },

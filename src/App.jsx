@@ -13,6 +13,7 @@ import CharacterModel from './components/CharacterModel'
 import HUD from './components/HUD'
 import GamepadController from './systems/GamepadController'
 import AudioManager from './systems/AudioManager'
+import IdleDetector from './systems/IdleDetector'
 
 const animationSet = {
   idle: 'Idle',
@@ -82,6 +83,7 @@ function App() {
             <Player />
             <Stars />
             <FallDetector />
+            <IdleDetector />
             <Atmosphere />
           </Physics>
         </Suspense>
