@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useFrame } from '@react-three/fiber'
 
 const DEADZONE = 0.15
@@ -6,42 +6,53 @@ const DEADZONE = 0.15
 const applyDeadzone = (value, threshold = DEADZONE) =>
   Math.abs(value) < threshold ? 0 : value
 
-// Axis directions → key codes
-const AXIS_MAP = [
-  { axis: 0, dir: -1, code: 'KeyA' },   // left stick left → A
-  { axis: 0, dir: 1, code: 'KeyD' },    // left stick right → D
-  { axis: 1, dir: -1, code: 'KeyW' },   // left stick up → W
-  { axis: 1, dir: 1, code: 'KeyS' },    // left stick down → S
-]
-
 // Button indices → key codes (standard mapping)
 const BUTTON_MAP = [
   { index: 0, code: 'Space' },      // Cross (X) → jump
   { index: 4, code: 'ShiftLeft' },  // L1 → sprint
 ]
 
-function dispatch(type, code) {
-  document.dispatchEvent(new KeyboardEvent(type, { code, bubbles: true }))
-}
-
 export default function GamepadController() {
-  const axisState = useRef({})   // 'KeyW' → true/false
-  const buttonState = useRef({}) // 'Space' → true/false
+  const activeKeys = useRef(new Set())
 
-  // Log connection / disconnection
+  function pressKey(code) {
+    if (!activeKeys.current.has(code)) {
+      activeKeys.current.add(code)
+      document.dispatchEvent(new KeyboardEvent('keydown', { code, bubbles: true }))
+    }
+  }
+
+  function releaseKey(code) {
+    if (activeKeys.current.has(code)) {
+      activeKeys.current.delete(code)
+      document.dispatchEvent(new KeyboardEvent('keyup', { code, bubbles: true }))
+    }
+  }
+
+  const releaseAll = useCallback(() => {
+    for (const code of activeKeys.current) {
+      document.dispatchEvent(new KeyboardEvent('keyup', { code, bubbles: true }))
+    }
+    activeKeys.current.clear()
+  }, [])
+
+  // Log connection / disconnection; release all keys on disconnect
   useEffect(() => {
     const onConnect = (e) =>
       console.log(`Gamepad connected: ${e.gamepad.id}`)
-    const onDisconnect = (e) =>
+    const onDisconnect = (e) => {
       console.log(`Gamepad disconnected: ${e.gamepad.id}`)
+      releaseAll()
+    }
 
     window.addEventListener('gamepadconnected', onConnect)
     window.addEventListener('gamepaddisconnected', onDisconnect)
     return () => {
       window.removeEventListener('gamepadconnected', onConnect)
       window.removeEventListener('gamepaddisconnected', onDisconnect)
+      releaseAll()
     }
-  }, [])
+  }, [releaseAll])
 
   useFrame(() => {
     const gamepads = navigator.getGamepads()
@@ -55,32 +66,21 @@ export default function GamepadController() {
     if (!gp) return
 
     // --- Axes (left stick) ---
-    for (const { axis, dir, code } of AXIS_MAP) {
-      const raw = applyDeadzone(gp.axes[axis])
-      const active = dir < 0 ? raw < -DEADZONE : raw > DEADZONE
-      const prev = !!axisState.current[code]
+    const lx = applyDeadzone(gp.axes[0])
+    const ly = applyDeadzone(gp.axes[1])
 
-      if (active && !prev) {
-        dispatch('keydown', code)
-        axisState.current[code] = true
-      } else if (!active && prev) {
-        dispatch('keyup', code)
-        axisState.current[code] = false
-      }
-    }
+    // Left / right
+    if (lx < -DEADZONE) pressKey('KeyA'); else releaseKey('KeyA')
+    if (lx > DEADZONE)  pressKey('KeyD'); else releaseKey('KeyD')
+
+    // Forward / back
+    if (ly < -DEADZONE) pressKey('KeyW'); else releaseKey('KeyW')
+    if (ly > DEADZONE)  pressKey('KeyS'); else releaseKey('KeyS')
 
     // --- Buttons ---
     for (const { index, code } of BUTTON_MAP) {
-      const active = gp.buttons[index].pressed
-      const prev = !!buttonState.current[code]
-
-      if (active && !prev) {
-        dispatch('keydown', code)
-        buttonState.current[code] = true
-      } else if (!active && prev) {
-        dispatch('keyup', code)
-        buttonState.current[code] = false
-      }
+      if (gp.buttons[index].pressed) pressKey(code)
+      else releaseKey(code)
     }
   })
 
