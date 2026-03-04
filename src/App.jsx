@@ -2,20 +2,34 @@ import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { KeyboardControls } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
-import Ecctrl from 'ecctrl'
+import Ecctrl, { EcctrlAnimation } from 'ecctrl'
 import { keyboardMap } from './config/controls'
 import { ecctrlRef } from './lib/ecctrlRef'
 import Atmosphere from './components/Atmosphere'
 import Platforms from './components/Platforms'
 import Stars from './components/Stars'
 import FallDetector from './components/FallDetector'
+import CharacterModel from './components/CharacterModel'
 import HUD from './components/HUD'
 import GamepadController from './systems/GamepadController'
+
+const animationSet = {
+  idle: 'Idle',
+  walk: 'Walk',
+  run: 'Run',
+  jump: 'Jump_Start',
+  jumpIdle: 'Jump_Idle',
+  jumpLand: 'Jump_Land',
+  fall: 'Fall',
+}
+
+const characterURL = '/models/character.glb'
 
 function Player() {
   return (
     <Ecctrl
       ref={ecctrlRef}
+      animated
       capsuleHalfHeight={0.35}
       capsuleRadius={0.3}
       floatHeight={0.1}
@@ -28,31 +42,9 @@ function Player() {
       camMaxDis={-8}
       camInitDir={{ x: 0.3, y: 0 }}
     >
-      {/* Placeholder character — capsule with eyes */}
-      <group>
-        <mesh castShadow position={[0, 0.3, 0]}>
-          <capsuleGeometry args={[0.3, 0.5, 8, 16]} />
-          <meshToonMaterial color="#e07050" />
-        </mesh>
-        {/* Eyes */}
-        <mesh position={[0.12, 0.55, 0.25]}>
-          <sphereGeometry args={[0.06]} />
-          <meshBasicMaterial color="white" />
-        </mesh>
-        <mesh position={[-0.12, 0.55, 0.25]}>
-          <sphereGeometry args={[0.06]} />
-          <meshBasicMaterial color="white" />
-        </mesh>
-        {/* Pupils */}
-        <mesh position={[0.12, 0.55, 0.3]}>
-          <sphereGeometry args={[0.03]} />
-          <meshBasicMaterial color="#222" />
-        </mesh>
-        <mesh position={[-0.12, 0.55, 0.3]}>
-          <sphereGeometry args={[0.03]} />
-          <meshBasicMaterial color="#222" />
-        </mesh>
-      </group>
+      <EcctrlAnimation animationSet={animationSet} characterURL={characterURL}>
+        <CharacterModel position={[0, -0.65, 0]} />
+      </EcctrlAnimation>
     </Ecctrl>
   )
 }
