@@ -1,6 +1,6 @@
-import { Suspense } from 'react'
+import { Suspense, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { KeyboardControls } from '@react-three/drei'
+import { KeyboardControls, useGLTF } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
 import Ecctrl, { EcctrlAnimation } from 'ecctrl'
 import { keyboardMap } from './config/controls'
@@ -25,6 +25,26 @@ const animationSet = {
 
 const characterURL = '/models/character.glb'
 
+/**
+ * Strips root-bone position tracks from Mixamo animations.
+ * Mixamo bakes world-space translation into the Hips bone, which fights
+ * with ecctrl's physics-based positioning and causes visible snap-back.
+ * Mutates the cached useGLTF data BEFORE EcctrlAnimation reads it.
+ */
+function StripRootMotion({ url }) {
+  const { animations } = useGLTF(url)
+  const stripped = useRef(false)
+  if (!stripped.current) {
+    animations.forEach((clip) => {
+      clip.tracks = clip.tracks.filter(
+        (t) => !(t.name.includes('.position') && t.name.includes('Hips'))
+      )
+    })
+    stripped.current = true
+  }
+  return null
+}
+
 function Player() {
   return (
     <Ecctrl
@@ -42,6 +62,7 @@ function Player() {
       camMaxDis={-8}
       camInitDir={{ x: 0.3, y: 0 }}
     >
+      <StripRootMotion url={characterURL} />
       <EcctrlAnimation animationSet={animationSet} characterURL={characterURL}>
         <CharacterModel position={[0, -0.75, 0]} />
       </EcctrlAnimation>
