@@ -29,6 +29,9 @@ export const PLATFORMS = [
   { pos: [18, 2.0, 2], size: [4, 0.8, 4], color: COLORS.accent },
 ]
 
+export const RESPAWN_HEIGHT = -10 // Y threshold to trigger respawn
+export const SPAWN_POINT = [0, 2, 0] // Where the player reappears
+
 // Star positions — ~1.5 units above each platform surface
 export const STARS = [
   [1, 1.5, 1],       // starting island freebie

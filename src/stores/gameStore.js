@@ -12,6 +12,9 @@ const useGameStore = create((set) => ({
       next.add(index)
       return { starsCollected: next }
     }),
+
+  fallCount: 0,
+  recordFall: () => set((state) => ({ fallCount: state.fallCount + 1 })),
 }))
 
 export default useGameStore

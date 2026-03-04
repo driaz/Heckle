@@ -8,6 +8,7 @@ import { ecctrlRef } from './lib/ecctrlRef'
 import Atmosphere from './components/Atmosphere'
 import Platforms from './components/Platforms'
 import Stars from './components/Stars'
+import FallDetector from './components/FallDetector'
 import HUD from './components/HUD'
 import GamepadController from './systems/GamepadController'
 
@@ -66,6 +67,7 @@ function App() {
             <Platforms />
             <Player />
             <Stars />
+            <FallDetector />
             <Atmosphere />
           </Physics>
         </Suspense>
