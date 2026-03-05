@@ -1,5 +1,6 @@
 import { GoogleGenAI, Modality } from '@google/genai'
-import { onTurnComplete } from './GameDirector'
+import { onTurnComplete, setPlayerSpeaking, setPlayerNotSpeaking } from './GameDirector'
+import useGameStore from '../stores/gameStore'
 
 const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY })
 
@@ -10,19 +11,29 @@ const config = {
   speechConfig: {
     voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Charon' } },
   },
+  inputAudioTranscription: {},
   outputAudioTranscription: {},
-  systemInstruction: `You are the narrator of a platformer called Heckle. You watch the player and heckle them live.
+  systemInstruction: `You are the narrator of a platformer called Heckle. You watch the player and heckle them live. You can also hear the player talking.
 
-RULES:
-- Maximum 6-8 words per response. Punchy. Think sports commentator highlight reel, not full sentences. Brevity IS the comedy.
-- Never be generic. React to the SPECIFIC details in the message (death count, time, which star, etc.)
-- Vary your energy constantly: deadpan, mock-concern, over-the-top shock, dry wit, fake encouragement, theatrical disappointment. Never use the same tone twice in a row.
-- You're the friend who roasts hardest but cheers loudest when they actually pull something off.
-- When they fail repeatedly, escalate gradually: mild teasing → disbelief → existential concern → begrudging respect for their persistence.
-- When they succeed, act SURPRISED. You didn't think they had it in them.
-- Callback to earlier moments in the session when possible. You remember everything.
-- Never explain the game or give advice. You're a commentator, not a guide.
-- No filler words. No "well" or "oh" to start sentences. Hit hard immediately.`,
+WHEN REACTING TO GAME EVENTS (falls, star collections, idle):
+- Maximum 6-8 words. Punchy. Like a sports commentator highlight reel.
+- Never be generic. React to the specific details.
+- Vary your energy: deadpan, mock-concern, shock, dry wit, theatrical disappointment.
+- Escalate gradually on repeated failures.
+
+WHEN THE PLAYER TALKS TO YOU:
+- Be conversational. 1-2 sentences is fine.
+- Actually respond to what they said — acknowledge their words, clap back, banter.
+- Stay in character — you're still a sarcastic heckler, but you're having a conversation now.
+- If they're complaining about the game, be playfully unsympathetic.
+- If they're trash-talking you, give it right back.
+- If they say something funny, you can laugh or acknowledge it before roasting them.
+- You remember everything that happened this session — reference it.
+
+ALWAYS:
+- You're the friend who roasts hardest but cheers loudest when they succeed.
+- No filler words to start sentences. Hit hard immediately.
+- Never explain the game or give advice. You're a commentator, not a guide.`,
 }
 
 let session = null
@@ -31,6 +42,12 @@ let nextPlayTime = 0
 let speechStartCallback = null
 let speechEndCallback = null
 let turnSpeechStarted = false
+
+// Mic state
+let micStream = null
+let micProcessor = null
+let micSource = null
+let micContext = null
 
 function onSpeechStart(cb) { speechStartCallback = cb }
 function onSpeechEnd(cb) { speechEndCallback = cb }
@@ -70,6 +87,89 @@ function queueAudioChunk(base64Data) {
   nextPlayTime = startTime + buffer.duration
 }
 
+function float32ToBase64Int16(float32Array) {
+  const int16Array = new Int16Array(float32Array.length)
+  for (let i = 0; i < float32Array.length; i++) {
+    const s = Math.max(-1, Math.min(1, float32Array[i]))
+    int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7fff
+  }
+  const bytes = new Uint8Array(int16Array.buffer)
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary)
+}
+
+async function startMic() {
+  if (!session) return
+  if (micStream) return
+
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        sampleRate: 16000,
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+    })
+
+    // Create a separate AudioContext at 16kHz for mic capture
+    micContext = new AudioContext({ sampleRate: 16000 })
+    micSource = micContext.createMediaStreamSource(micStream)
+
+    // ScriptProcessorNode: 4096 samples, mono in, zero out
+    micProcessor = micContext.createScriptProcessor(4096, 1, 1)
+
+    micProcessor.onaudioprocess = (e) => {
+      // Echo prevention: skip sending mic data while narrator is speaking
+      if (turnSpeechStarted) return
+      if (!session) return
+
+      const inputData = e.inputBuffer.getChannelData(0)
+      const base64 = float32ToBase64Int16(inputData)
+
+      session.sendRealtimeInput({
+        audio: {
+          data: base64,
+          mimeType: 'audio/pcm;rate=16000',
+        },
+      })
+    }
+
+    micSource.connect(micProcessor)
+    micProcessor.connect(micContext.destination)
+
+    useGameStore.getState().setMicActive(true)
+    console.log('[Narrator] Mic active')
+  } catch (err) {
+    console.log('[Narrator] Mic permission denied or unavailable:', err.message)
+    micStream = null
+  }
+}
+
+function stopMic() {
+  if (micProcessor) {
+    micProcessor.disconnect()
+    micProcessor = null
+  }
+  if (micSource) {
+    micSource.disconnect()
+    micSource = null
+  }
+  if (micContext) {
+    micContext.close()
+    micContext = null
+  }
+  if (micStream) {
+    micStream.getTracks().forEach((t) => t.stop())
+    micStream = null
+  }
+  useGameStore.getState().setMicActive(false)
+}
+
 async function connect() {
   if (session) return
 
@@ -79,7 +179,10 @@ async function connect() {
     model,
     config,
     callbacks: {
-      onopen: () => console.log('[Narrator] Connected'),
+      onopen: () => {
+        console.log('[Narrator] Connected')
+        startMic()
+      },
       onmessage: (message) => {
         if (message.serverContent?.modelTurn?.parts) {
           for (const part of message.serverContent.modelTurn.parts) {
@@ -92,6 +195,10 @@ async function connect() {
             }
           }
         }
+        if (message.serverContent?.inputTranscription?.text) {
+          console.log('[Player] said:', message.serverContent.inputTranscription.text)
+          setPlayerSpeaking()
+        }
         if (message.serverContent?.outputTranscription?.text) {
           console.log('[Narrator] said:', message.serverContent.outputTranscription.text)
         }
@@ -99,6 +206,7 @@ async function connect() {
           console.log('[Narrator] Turn complete')
           turnSpeechStarted = false
           speechEndCallback?.()
+          setPlayerNotSpeaking()
           onTurnComplete()
         }
       },
@@ -128,10 +236,11 @@ async function send(text) {
 }
 
 function disconnect() {
+  stopMic()
   if (session) {
     session.close()
     session = null
   }
 }
 
-export default { connect, send, disconnect, onSpeechStart, onSpeechEnd }
+export default { connect, send, disconnect, onSpeechStart, onSpeechEnd, startMic, stopMic }
