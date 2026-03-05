@@ -28,6 +28,12 @@ RULES:
 let session = null
 let audioContext = null
 let nextPlayTime = 0
+let speechStartCallback = null
+let speechEndCallback = null
+let turnSpeechStarted = false
+
+function onSpeechStart(cb) { speechStartCallback = cb }
+function onSpeechEnd(cb) { speechEndCallback = cb }
 
 function ensureAudioContext() {
   if (!audioContext) {
@@ -78,6 +84,10 @@ async function connect() {
         if (message.serverContent?.modelTurn?.parts) {
           for (const part of message.serverContent.modelTurn.parts) {
             if (part.inlineData?.data) {
+              if (!turnSpeechStarted) {
+                turnSpeechStarted = true
+                speechStartCallback?.()
+              }
               queueAudioChunk(part.inlineData.data)
             }
           }
@@ -87,17 +97,23 @@ async function connect() {
         }
         if (message.serverContent?.turnComplete) {
           console.log('[Narrator] Turn complete')
+          turnSpeechStarted = false
+          speechEndCallback?.()
           onTurnComplete()
         }
       },
       onerror: (error) => {
         console.error('[Narrator] Error:', error)
         session = null
+        turnSpeechStarted = false
+        speechEndCallback?.()
         onTurnComplete()
       },
       onclose: (event) => {
         console.log('[Narrator] Disconnected:', event.reason)
         session = null
+        turnSpeechStarted = false
+        speechEndCallback?.()
         onTurnComplete()
       },
     },
@@ -118,4 +134,4 @@ function disconnect() {
   }
 }
 
-export default { connect, send, disconnect }
+export default { connect, send, disconnect, onSpeechStart, onSpeechEnd }

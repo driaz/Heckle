@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import narratorVoice from './NarratorVoice'
 
 const MUSIC_URL = '/audio/Sunny Steps.mp3'
 const MUSIC_VOLUME = 0.3
+const DUCK_VOLUME = 0.05
+const DUCK_DOWN_MS = 400
+const DUCK_UP_MS = 800
 
 /**
  * Handles all game audio. Renders a "click to start" overlay until the
@@ -10,6 +14,7 @@ const MUSIC_VOLUME = 0.3
  */
 export default function AudioManager() {
   const musicRef = useRef(null)
+  const fadeRef = useRef(null)
   const [started, setStarted] = useState(false)
 
   // Create the Audio element once
@@ -24,6 +29,45 @@ export default function AudioManager() {
       music.pause()
       music.src = ''
       musicRef.current = null
+    }
+  }, [])
+
+  // Subscribe to narrator speech events for music ducking
+  useEffect(() => {
+    function fadeMusic(target, durationMs) {
+      const music = musicRef.current
+      if (!music) return
+
+      // Cancel any in-progress fade
+      if (fadeRef.current) cancelAnimationFrame(fadeRef.current)
+
+      const start = music.volume
+      const diff = target - start
+      if (Math.abs(diff) < 0.001) return
+
+      const startTime = performance.now()
+
+      function step(now) {
+        const elapsed = now - startTime
+        const t = Math.min(elapsed / durationMs, 1)
+        music.volume = start + diff * t
+        if (t < 1) {
+          fadeRef.current = requestAnimationFrame(step)
+        } else {
+          fadeRef.current = null
+        }
+      }
+
+      fadeRef.current = requestAnimationFrame(step)
+    }
+
+    narratorVoice.onSpeechStart(() => fadeMusic(DUCK_VOLUME, DUCK_DOWN_MS))
+    narratorVoice.onSpeechEnd(() => fadeMusic(MUSIC_VOLUME, DUCK_UP_MS))
+
+    return () => {
+      narratorVoice.onSpeechStart(null)
+      narratorVoice.onSpeechEnd(null)
+      if (fadeRef.current) cancelAnimationFrame(fadeRef.current)
     }
   }, [])
 
