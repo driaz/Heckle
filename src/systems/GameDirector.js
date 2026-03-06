@@ -9,46 +9,70 @@ let lastNarrationTime = 0
 let isSpeaking = false
 let firstFallSeen = false
 let firstIdleSeen = false
+let playerSpeaking = false
+let lastPlayerSpeechTime = 0
 
 function buildPrompt(event) {
   const store = useGameStore.getState()
   const sessionTime = Math.floor((Date.now() - store.sessionStart) / 1000)
+  const mem = store.sessionMemory
 
-  const context = `[Session: ${sessionTime}s, Stars: ${store.starsCollected.size}/${store.totalStars}, Deaths: ${store.deathCount}]`
+  const baseContext = `[Session: ${sessionTime}s, Stars: ${store.starsCollected.size}/${store.totalStars}, Deaths: ${store.deathCount}]`
+
+  // Build memory context — only include what's relevant to THIS event
+  let memoryContext = ''
 
   switch (event.type) {
-    case 'fall':
+    case 'fall': {
+      if (event.position) {
+        const posKey = `${Math.round(event.position[0])},${Math.round(event.position[1])},${Math.round(event.position[2])}`
+        const spotCount = mem.troubleSpots[posKey] || 0
+        if (spotCount >= 3) {
+          memoryContext = ` [RECURRING: Player has fallen from this same spot ${spotCount} times this session.]`
+        }
+      }
+      if (mem.deathStreak >= 3) {
+        memoryContext += ` [STREAK: ${mem.deathStreak} deaths in a row without collecting a star.]`
+      }
       if (event.rapidDeath) {
-        return `${context} RAPID DEATH — fell again only ${event.timeSinceLastDeath.toFixed(1)}s after the last death. Fall #${event.fallCount}. They're spiraling.`
+        return `${baseContext}${memoryContext} RAPID DEATH — fell again only ${event.timeSinceLastDeath.toFixed(1)}s after the last death. Fall #${event.fallCount}.`
       }
       if (event.fallCount === 1) {
-        return `${context} First death of the session. They just walked right off.`
+        return `${baseContext} First death of the session.`
       }
-      if (event.fallCount >= 5) {
-        return `${context} Fall #${event.fallCount}. This is getting absurd.`
-      }
-      return `${context} Fell off a platform. Death #${event.fallCount}.`
+      return `${baseContext}${memoryContext} Fell off a platform. Death #${event.fallCount}.`
+    }
 
-    case 'collect':
+    case 'collect': {
       if (event.isLast) {
-        return `${context} FINAL STAR COLLECTED — all ${event.totalStars} stars! They actually did it.`
+        const deathsItTook = store.deathCount
+        return `${baseContext} FINAL STAR — all ${event.totalStars} collected! It took ${deathsItTook} deaths to get here.`
+      }
+      if (mem.bestDeathStreak >= 3) {
+        memoryContext = ` [Player just broke a ${mem.bestDeathStreak}-death streak by finally collecting a star.]`
       }
       if (event.totalCollected === 1) {
-        return `${context} Collected their first star. Only ${event.totalStars - 1} to go.`
+        return `${baseContext}${memoryContext} Collected their first star. Only ${event.totalStars - 1} to go.`
       }
-      return `${context} Star ${event.totalCollected}/${event.totalStars} collected.`
+      return `${baseContext}${memoryContext} Star ${event.totalCollected}/${event.totalStars} collected.`
+    }
 
-    case 'idle':
+    case 'idle': {
+      if (store.deathCount > 5 && event.duration > 10) {
+        memoryContext = ` [Player has died ${store.deathCount} times and is now just standing still. Probably frustrated.]`
+      }
       if (event.duration > 30) {
-        return `${context} Standing still for ${Math.floor(event.duration)} seconds. That's genuinely concerning.`
+        return `${baseContext}${memoryContext} Standing still for ${Math.floor(event.duration)} seconds.`
       }
-      return `${context} Idle for ${Math.floor(event.duration)} seconds.`
+      return `${baseContext}${memoryContext} Idle for ${Math.floor(event.duration)} seconds.`
+    }
 
-    case 'respawn':
-      if (event.deathCount >= 5) {
-        return `${context} Respawned. Death #${event.deathCount}. They keep coming back.`
+    case 'respawn': {
+      if (mem.bestDeathStreak >= 5) {
+        memoryContext = ` [Worst streak this session: ${mem.bestDeathStreak} deaths in a row.]`
       }
-      return `${context} Respawned after death #${event.deathCount}.`
+      return `${baseContext}${memoryContext} Respawned after death #${event.deathCount}.`
+    }
 
     default:
       return null
@@ -60,6 +84,11 @@ function shouldNarrate(event) {
 
   if (isSpeaking) {
     console.log('[GameDirector] Skip: narrator still speaking')
+    return false
+  }
+
+  if (playerSpeaking || (now - lastPlayerSpeechTime < 5000)) {
+    console.log('[GameDirector] Skip: player speaking or just finished')
     return false
   }
 
@@ -106,6 +135,18 @@ function handleEvent(event) {
 
 export function onTurnComplete() {
   isSpeaking = false
+}
+
+export function setPlayerSpeaking() {
+  playerSpeaking = true
+  lastPlayerSpeechTime = Date.now()
+  console.log('[GameDirector] Player speaking')
+}
+
+export function setPlayerNotSpeaking() {
+  playerSpeaking = false
+  lastPlayerSpeechTime = Date.now()
+  console.log('[GameDirector] Player stopped speaking')
 }
 
 function start() {
