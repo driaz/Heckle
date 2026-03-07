@@ -3,23 +3,30 @@ import { Sky, Cloud } from '@react-three/drei'
 export default function Atmosphere() {
   return (
     <>
-      <Sky sunPosition={[100, 20, 100]} />
-      <Cloud opacity={0.4} speed={0.3} width={20} depth={3} segments={20} position={[0, 20, 30]} />
-      <Cloud opacity={0.3} speed={0.2} width={15} depth={2} segments={15} position={[-15, 18, 80]} />
-      <Cloud opacity={0.35} speed={0.25} width={18} depth={2.5} segments={18} position={[10, 22, 120]} />
+      {/* Vivid cyan-blue sky — Fall Guys cheerful, not overcast */}
+      <Sky
+        sunPosition={[100, 40, 100]}
+        rayleigh={0.5}
+        turbidity={2}
+        mieCoefficient={0.005}
+        mieDirectionalG={0.8}
+      />
+      <Cloud opacity={0.5} speed={0.3} width={20} depth={3} segments={20} position={[0, 20, 30]} />
+      <Cloud opacity={0.4} speed={0.2} width={15} depth={2} segments={15} position={[-15, 18, 80]} />
+      <Cloud opacity={0.45} speed={0.25} width={18} depth={2.5} segments={18} position={[10, 22, 120]} />
 
-      {/* Light fog — near-white, pushed far so nothing looks muddy */}
-      <fog attach="fog" args={['#eef6ff', 60, 200]} />
+      {/* Fog — bright blue tint, matching the sky */}
+      <fog attach="fog" args={['#c0e8ff', 80, 220]} />
 
       {/* Bright ambient — nothing goes dark */}
-      <ambientLight intensity={0.8} color="#ffffff" />
+      <ambientLight intensity={0.85} color="#ffffff" />
 
-      {/* Slightly warm directional sun, soft shadows */}
+      {/* Warm directional sun, soft shadows */}
       <directionalLight
         castShadow
-        position={[10, 20, 8]}
-        intensity={1.0}
-        color="#fff5e6"
+        position={[10, 30, 8]}
+        intensity={1.1}
+        color="#fff8ee"
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-far={200}
@@ -30,8 +37,14 @@ export default function Atmosphere() {
         shadow-bias={-0.0005}
       />
 
-      {/* Hemisphere fill — white from below, not green */}
-      <hemisphereLight args={['#a0d8f0', '#ffffff', 0.6]} />
+      {/* Hemisphere fill — bright sky blue from above, white from below */}
+      <hemisphereLight args={['#88d0f0', '#ffffff', 0.6]} />
+
+      {/* Ground plane far below the course — bright green distant grass */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -20, 65]} receiveShadow>
+        <planeGeometry args={[400, 400]} />
+        <meshStandardMaterial color="#68E068" roughness={0.9} metalness={0} />
+      </mesh>
     </>
   )
 }
