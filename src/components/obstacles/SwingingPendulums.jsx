@@ -6,9 +6,9 @@ import { COLORS } from '../../config/level'
 const TWO_PI = Math.PI * 2
 
 const PENDULUMS = [
-  { pivot: [0, 5, 75], armLength: 3.5, maxAngle: 0.7, period: 2.5, phase: 0 },
-  { pivot: [0, 5, 78.5], armLength: 4.0, maxAngle: 0.8, period: 2.0, phase: 0 },
-  { pivot: [0, 5, 82], armLength: 3.5, maxAngle: 0.7, period: 2.5, phase: 1.2 },
+  { pivot: [0, 6, 75], armLength: 3.5, maxAngle: 0.7, period: 2.5, phase: 0 },
+  { pivot: [0, 6, 78.5], armLength: 4.0, maxAngle: 0.8, period: 2.0, phase: 0 },
+  { pivot: [0, 6, 82], armLength: 3.5, maxAngle: 0.7, period: 2.5, phase: 1.2 },
 ]
 
 function Pendulum({ pivot, armLength, maxAngle, period, phase }) {
