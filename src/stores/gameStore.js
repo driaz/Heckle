@@ -12,6 +12,9 @@ const useGameStore = create((set, get) => ({
   events: [],
   micActive: false,
   setMicActive: (val) => set({ micActive: val }),
+  enemiesKilled: 0,
+  goalReached: false,
+  hazardDeaths: {},
   sessionMemory: {
     troubleSpots: {},
     longestIdleDuration: 0,
@@ -156,6 +159,90 @@ const useGameStore = create((set, get) => ({
         return { sessionMemory: mem, events: [...state.events, event] }
       }
       return { sessionMemory: mem }
+    }),
+
+  recordHazardDeath: (hazardName, position) =>
+    set((state) => {
+      const now = Date.now()
+      const newDeathCount = state.deathCount + 1
+      const hazardDeaths = { ...state.hazardDeaths }
+      hazardDeaths[hazardName] = (hazardDeaths[hazardName] || 0) + 1
+
+      const mem = { ...state.sessionMemory }
+      mem.troubleSpots = { ...mem.troubleSpots }
+      mem.deathStreak = mem.deathStreak + 1
+      if (mem.deathStreak > mem.bestDeathStreak) {
+        mem.bestDeathStreak = mem.deathStreak
+      }
+      mem.troubleSpots[hazardName] = (mem.troubleSpots[hazardName] || 0) + 1
+      if (mem.troubleSpots[hazardName] >= 3) {
+        mem.significantMoments = [
+          ...mem.significantMoments,
+          `Player has been killed by ${hazardName} ${mem.troubleSpots[hazardName]} times`,
+        ]
+      }
+
+      const event = {
+        type: EventType.HAZARD_DEATH,
+        timestamp: now,
+        hazardName,
+        position: position ? [position.x, position.y, position.z] : null,
+        deathCount: newDeathCount,
+        hazardSpecificCount: hazardDeaths[hazardName],
+      }
+
+      const base = {
+        deathCount: newDeathCount,
+        lastDeathTime: now,
+        hazardDeaths,
+        sessionMemory: mem,
+      }
+
+      if (eventBus.emit(event)) {
+        console.log('[EVENT]', event)
+        return { ...base, events: [...state.events, event] }
+      }
+      return base
+    }),
+
+  recordEnemyKill: (enemyName) =>
+    set((state) => {
+      const newKills = state.enemiesKilled + 1
+      const mem = { ...state.sessionMemory }
+      mem.deathStreak = 0
+
+      const event = {
+        type: EventType.ENEMY_KILL,
+        timestamp: Date.now(),
+        enemyName,
+        totalKills: newKills,
+      }
+
+      if (eventBus.emit(event)) {
+        console.log('[EVENT]', event)
+        return { enemiesKilled: newKills, sessionMemory: mem, events: [...state.events, event] }
+      }
+      return { enemiesKilled: newKills, sessionMemory: mem }
+    }),
+
+  recordGoalReached: () =>
+    set((state) => {
+      if (state.goalReached) return {}
+      const sessionTime = Math.floor((Date.now() - state.sessionStart) / 1000)
+
+      const event = {
+        type: EventType.GOAL_REACHED,
+        timestamp: Date.now(),
+        sessionTime,
+        starsCollected: state.starsCollected.size,
+        totalStars: state.totalStars,
+        deathCount: state.deathCount,
+        enemiesKilled: state.enemiesKilled,
+      }
+
+      eventBus.emit(event)
+      console.log('[EVENT]', event)
+      return { goalReached: true, events: [...state.events, event] }
     }),
 
   consumeEvents: () => {

@@ -1,21 +1,18 @@
 export const EventType = {
-  // Phase 1
   FALL: 'fall',
   COLLECT: 'collect',
   IDLE: 'idle',
   JUMP: 'jump',
   RESPAWN: 'respawn',
-
-  // Phase 2+ (defined now for extensibility)
-  ENEMY_DEATH: 'enemy_death',
   ENEMY_KILL: 'enemy_kill',
-  HAZARD: 'hazard',
-  DISCOVERY: 'discovery',
-  NEAR_MISS: 'near_miss',
+  HAZARD_DEATH: 'hazard_death',
+  GOAL_REACHED: 'goal_reached',
 }
 
 const PRIORITY = {
-  [EventType.NEAR_MISS]: 5,
+  [EventType.GOAL_REACHED]: 5,
+  [EventType.HAZARD_DEATH]: 4,
+  [EventType.ENEMY_KILL]: 3,
   [EventType.FALL]: 3,
   [EventType.COLLECT]: 2,
   [EventType.RESPAWN]: 2,
@@ -29,6 +26,9 @@ const COOLDOWN = {
   [EventType.IDLE]: 15000,
   [EventType.JUMP]: 10000,
   [EventType.RESPAWN]: 2000,
+  [EventType.HAZARD_DEATH]: 3000,
+  [EventType.ENEMY_KILL]: 2000,
+  [EventType.GOAL_REACHED]: 0,
 }
 
 class EventBus {

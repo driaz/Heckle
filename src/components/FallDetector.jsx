@@ -1,10 +1,16 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { ecctrlRef } from '../lib/ecctrlRef'
-import { RESPAWN_HEIGHT, SPAWN_POINT } from '../config/level'
+import { RESPAWN_HEIGHT, CHECKPOINTS } from '../config/level'
 import useGameStore from '../stores/gameStore'
 
 const COOLDOWN_MS = 1000
+
+function getCheckpointSpawn(playerZ) {
+  const sorted = [...CHECKPOINTS].sort((a, b) => b.z - a.z)
+  const cp = sorted.find((c) => playerZ >= c.z - 5) || CHECKPOINTS[0]
+  return cp.spawn
+}
 
 export default function FallDetector() {
   const lastRespawn = useRef(0)
@@ -23,8 +29,9 @@ export default function FallDetector() {
       store.recordFall(pos)
       store.recordRespawn()
 
+      const spawn = getCheckpointSpawn(pos.z)
       body.setTranslation(
-        { x: SPAWN_POINT[0], y: SPAWN_POINT[1], z: SPAWN_POINT[2] },
+        { x: spawn[0], y: spawn[1], z: spawn[2] },
         true
       )
       body.setLinvel({ x: 0, y: 0, z: 0 }, true)

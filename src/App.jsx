@@ -6,10 +6,12 @@ import Ecctrl, { EcctrlAnimation } from 'ecctrl'
 import { keyboardMap } from './config/controls'
 import { ecctrlRef } from './lib/ecctrlRef'
 import Atmosphere from './components/Atmosphere'
-import Platforms from './components/Platforms'
+import ObstacleCourse from './components/ObstacleCourse'
+import SceneDressing from './components/SceneDressing'
 import Stars from './components/Stars'
 import FallDetector from './components/FallDetector'
 import CharacterModel from './components/CharacterModel'
+import PostProcessing from './components/PostProcessing'
 import HUD from './components/HUD'
 import GamepadController from './systems/GamepadController'
 import AudioManager from './systems/AudioManager'
@@ -80,13 +82,15 @@ function App() {
         <Suspense fallback={null}>
           <GamepadController />
           <Physics gravity={[0, -9.81, 0]} timeStep={1 / 60} interpolate>
-            <Platforms />
+            <ObstacleCourse />
             <Player />
             <Stars />
             <FallDetector />
             <IdleDetector />
             <Atmosphere />
           </Physics>
+          <SceneDressing />
+          <PostProcessing />
         </Suspense>
       </Canvas>
       <HUD />

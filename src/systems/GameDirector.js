@@ -74,6 +74,26 @@ function buildPrompt(event) {
       return `${baseContext}${memoryContext} Respawned after death #${event.deathCount}.`
     }
 
+    case 'hazard_death': {
+      if (event.hazardSpecificCount >= 3) {
+        memoryContext = ` [NEMESIS: Player has been killed by "${event.hazardName}" ${event.hazardSpecificCount} times now.]`
+      }
+      if (mem.deathStreak >= 3) {
+        memoryContext += ` [STREAK: ${mem.deathStreak} deaths in a row.]`
+      }
+      return `${baseContext}${memoryContext} Killed by "${event.hazardName}". Death #${event.deathCount}.`
+    }
+
+    case 'enemy_kill': {
+      return `${baseContext} Stomped a ${event.enemyName}! Kill #${event.totalKills}.`
+    }
+
+    case 'goal_reached': {
+      const mins = Math.floor(event.sessionTime / 60)
+      const secs = event.sessionTime % 60
+      return `${baseContext} COURSE COMPLETE! Finished in ${mins}m ${secs}s with ${event.starsCollected}/${event.totalStars} stars and ${event.deathCount} deaths. ${event.enemiesKilled} enemies defeated.`
+    }
+
     default:
       return null
   }
@@ -97,7 +117,10 @@ function shouldNarrate(event) {
     return false
   }
 
-  // Always narrate
+  // Always narrate these
+  if (event.type === 'hazard_death') return true
+  if (event.type === 'enemy_kill') return true
+  if (event.type === 'goal_reached') return true
   if (event.type === 'fall' && event.fallCount === 1) {
     firstFallSeen = true
     return true

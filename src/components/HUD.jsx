@@ -17,6 +17,7 @@ export default function HUD() {
   const total = useGameStore((s) => s.totalStars)
   const falls = useGameStore((s) => s.fallCount)
   const micActive = useGameStore((s) => s.micActive)
+  const goalReached = useGameStore((s) => s.goalReached)
 
   return (
     <div
@@ -43,6 +44,18 @@ export default function HUD() {
       {micActive && (
         <div style={pillStyle}>
           🎤
+        </div>
+      )}
+      {goalReached && (
+        <div
+          style={{
+            ...pillStyle,
+            background: 'rgba(255, 215, 0, 0.8)',
+            fontSize: 22,
+            textAlign: 'center',
+          }}
+        >
+          Course Complete!
         </div>
       )}
     </div>
