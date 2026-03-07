@@ -1,4 +1,28 @@
-import { Sky, Cloud } from '@react-three/drei'
+import { Sky } from '@react-three/drei'
+
+/* ── Cartoon cloud — overlapping white spheres, always pure white ── */
+function CartoonCloud({ position, scale = 1 }) {
+  return (
+    <group position={position} scale={scale}>
+      <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[2, 12, 12]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+      <mesh position={[1.8, 0.3, 0.2]}>
+        <sphereGeometry args={[1.6, 12, 12]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+      <mesh position={[-1.6, 0.2, -0.3]}>
+        <sphereGeometry args={[1.7, 12, 12]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+      <mesh position={[0.5, 0.6, 0.1]}>
+        <sphereGeometry args={[1.4, 12, 12]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+    </group>
+  )
+}
 
 export default function Atmosphere() {
   return (
@@ -11,9 +35,13 @@ export default function Atmosphere() {
         mieCoefficient={0.005}
         mieDirectionalG={0.8}
       />
-      <Cloud color="#FFFFFF" opacity={0.6} speed={0.3} width={20} depth={1.5} segments={12} position={[0, 22, 30]} />
-      <Cloud color="#FFFFFF" opacity={0.55} speed={0.2} width={15} depth={1.5} segments={10} position={[-15, 20, 80]} />
-      <Cloud color="#FFFFFF" opacity={0.6} speed={0.25} width={18} depth={1.5} segments={12} position={[10, 24, 120]} />
+
+      {/* Cartoon clouds — meshBasicMaterial so they're always pure white */}
+      <CartoonCloud position={[12, 22, 20]} scale={1.2} />
+      <CartoonCloud position={[-18, 20, 50]} scale={1.0} />
+      <CartoonCloud position={[15, 24, 85]} scale={0.9} />
+      <CartoonCloud position={[-12, 21, 115]} scale={1.1} />
+      <CartoonCloud position={[8, 25, 140]} scale={0.8} />
 
       {/* Fog — bright blue tint, matching the sky */}
       <fog attach="fog" args={['#c0e8ff', 80, 220]} />
