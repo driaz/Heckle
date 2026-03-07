@@ -72,7 +72,7 @@ export default function GoalArea() {
           size={5}
           scale={[12, 10, 12]}
           speed={2}
-          color="#ffd700"
+          color="#FFFF00"
           position={[0, 5, 131]}
         />
       )}

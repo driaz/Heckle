@@ -3,7 +3,7 @@ export const COLORS = {
   // Section 1: Green Meadows — candy spring greens and sunshine yellow
   meadowGround: '#58D858',
   meadowPlatform: '#78F078',
-  meadowAccent: '#FFE030',
+  meadowAccent: '#FFFF00',
   meadowLight: '#90F090',
 
   // Section 2: Crystal Gauntlet — sky blue and bubblegum purple
@@ -12,18 +12,18 @@ export const COLORS = {
   crystalAccent: '#78D8FF',
   crystalLight: '#E088FF',
 
-  // Section 3: Lava Peaks — cherry red, iPod-nano orange, sunshine amber
+  // Section 3: Lava Peaks — cherry red, amber orange, bright yellow
   lavaGround: '#FF6872',
-  lavaPlatform: '#FF9500',
-  lavaAccent: '#FFBE30',
+  lavaPlatform: '#FFA500',
+  lavaAccent: '#FFFF00',
   lavaLight: '#FF7880',
 
   // Goal
-  goalGold: '#FFE030',
+  goalGold: '#FFFF00',
   goalWhite: '#FFFFFF',
 
   // Shared
-  star: '#FFE040',
+  star: '#FFFF00',
   fog: '#c0e8ff',
   bouncy: '#FF68A8',
   danger: '#FF5070',
