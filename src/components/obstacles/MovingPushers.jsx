@@ -13,7 +13,7 @@ const WALLS = [
 
 function PusherWall({ z, height, period, phase }) {
   const bodyRef = useRef()
-  const baseY = 0.8 + height / 2
+  const baseY = 0.95 + height / 2
 
   useFrame((state) => {
     if (!bodyRef.current) return
