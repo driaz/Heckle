@@ -7,22 +7,22 @@ function SectionGate({ position, pillarColor, beamColor }) {
   return (
     <group position={position}>
       {/* Left pillar */}
-      <mesh position={[-2.5, 1.5, 0]} castShadow>
+      <mesh position={[-3.5, 1.5, 0]} castShadow>
         <boxGeometry args={[0.5, 3, 0.5]} />
         <meshStandardMaterial color={pillarColor} roughness={0.65} metalness={0.05} />
       </mesh>
       {/* Right pillar */}
-      <mesh position={[2.5, 1.5, 0]} castShadow>
+      <mesh position={[3.5, 1.5, 0]} castShadow>
         <boxGeometry args={[0.5, 3, 0.5]} />
         <meshStandardMaterial color={pillarColor} roughness={0.65} metalness={0.05} />
       </mesh>
       {/* Top beam */}
       <mesh position={[0, 3.2, 0]} castShadow>
-        <boxGeometry args={[5.5, 0.4, 0.5]} />
+        <boxGeometry args={[7.5, 0.4, 0.5]} />
         <meshStandardMaterial color={beamColor} roughness={0.65} metalness={0.05} />
       </mesh>
       {/* Decorative spheres on top of pillars */}
-      <mesh position={[-2.5, 3.2, 0]}>
+      <mesh position={[-3.5, 3.2, 0]}>
         <sphereGeometry args={[0.3, 8, 8]} />
         <meshStandardMaterial
           color={beamColor}
@@ -32,7 +32,7 @@ function SectionGate({ position, pillarColor, beamColor }) {
           metalness={0.05}
         />
       </mesh>
-      <mesh position={[2.5, 3.2, 0]}>
+      <mesh position={[3.5, 3.2, 0]}>
         <sphereGeometry args={[0.3, 8, 8]} />
         <meshStandardMaterial
           color={beamColor}
@@ -143,11 +143,11 @@ export default function SceneDressing() {
       <Bush position={[-3.5, -0.2, 22]} scale={0.9} />
 
       {/* ─── Rocks (lava section scatter) ─── */}
-      <Rock position={[-2, 0.8, 88]} scale={1.2} />
-      <Rock position={[2.5, 0.8, 90]} scale={0.8} rotation={[0.5, 0.2, 0.3]} />
-      <Rock position={[-1.5, 1.0, 102]} scale={1.0} />
-      <Rock position={[2, 1.2, 108]} scale={0.9} rotation={[0.1, 0.8, 0.2]} />
-      <Rock position={[-2, 1.3, 114]} scale={1.1} rotation={[0.4, 0.1, 0.6]} />
+      <Rock position={[-3.5, 0.8, 88]} scale={1.2} />
+      <Rock position={[3, 0.8, 91]} scale={0.8} rotation={[0.5, 0.2, 0.3]} />
+      <Rock position={[-3, 1.0, 102]} scale={1.0} />
+      <Rock position={[3.5, 1.2, 108]} scale={0.9} rotation={[0.1, 0.8, 0.2]} />
+      <Rock position={[-3, 1.3, 114]} scale={1.1} rotation={[0.4, 0.1, 0.6]} />
     </>
   )
 }

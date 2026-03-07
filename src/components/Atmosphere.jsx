@@ -9,7 +9,7 @@ export default function Atmosphere() {
       <Cloud opacity={0.35} speed={0.25} width={18} depth={2.5} segments={18} position={[10, 22, 120]} />
 
       {/* Light fog — near-white, pushed far so nothing looks muddy */}
-      <fog attach="fog" args={['#e8f4ff', 60, 200]} />
+      <fog attach="fog" args={['#eef6ff', 60, 200]} />
 
       {/* Bright ambient — nothing goes dark */}
       <ambientLight intensity={0.8} color="#ffffff" />
@@ -31,7 +31,7 @@ export default function Atmosphere() {
       />
 
       {/* Hemisphere fill — white from below, not green */}
-      <hemisphereLight args={['#87ceeb', '#ffffff', 0.5]} />
+      <hemisphereLight args={['#a0d8f0', '#ffffff', 0.6]} />
     </>
   )
 }

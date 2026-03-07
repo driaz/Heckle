@@ -4,11 +4,11 @@ import { RigidBody } from '@react-three/rapier'
 import { COLORS } from '../../config/level'
 
 const STEPS = [
-  { pos: [0, 0.8, 47], size: [2.5, 0.4, 2.5], color: COLORS.crystalPlatform, stagger: 0 },
-  { pos: [-1, 1.0, 50], size: [2.5, 0.4, 2.5], color: COLORS.crystalLight, stagger: 0.9 },
+  { pos: [0, 0.8, 48.5], size: [2.5, 0.4, 2.5], color: COLORS.crystalPlatform, stagger: 0 },
+  { pos: [-1, 1.0, 51], size: [2.5, 0.4, 2.5], color: COLORS.crystalLight, stagger: 0.9 },
   { pos: [1, 1.1, 53], size: [2.5, 0.4, 2.5], color: COLORS.crystalPlatform, stagger: 1.8 },
-  { pos: [-0.5, 1.0, 56], size: [2.5, 0.4, 2.5], color: COLORS.crystalLight, stagger: 2.7 },
-  { pos: [0.5, 0.9, 59], size: [2.5, 0.4, 2.5], color: COLORS.crystalPlatform, stagger: 3.6 },
+  { pos: [-0.5, 1.0, 55.5], size: [2.5, 0.4, 2.5], color: COLORS.crystalLight, stagger: 2.7 },
+  { pos: [0.5, 0.9, 57.5], size: [2.5, 0.4, 2.5], color: COLORS.crystalPlatform, stagger: 3.6 },
 ]
 
 const CYCLE = 4.5

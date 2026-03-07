@@ -15,9 +15,9 @@ const PATH_SEGMENTS = [
   { pos: [0, 1.5, 114.5], size: [3, 0.3, 4], color: COLORS.lavaGround },
   { pos: [3, 1.5, 118], size: [3, 0.3, 4], color: COLORS.lavaPlatform },
   { pos: [0, 1.5, 121.5], size: [3, 0.3, 4], color: COLORS.lavaGround },
-  // Connecting bridges
-  { pos: [1.5, 1.5, 116.25], size: [4.5, 0.3, 1.5], color: COLORS.lavaPlatform },
-  { pos: [1.5, 1.5, 119.75], size: [4.5, 0.3, 1.5], color: COLORS.lavaPlatform },
+  // Connecting bridges (raised slightly to avoid z-fighting with main segments)
+  { pos: [1.5, 1.55, 116.25], size: [3, 0.3, 1.5], color: COLORS.lavaPlatform },
+  { pos: [1.5, 1.55, 119.75], size: [3, 0.3, 1.5], color: COLORS.lavaPlatform },
 ]
 
 function getCheckpointSpawn(playerZ) {

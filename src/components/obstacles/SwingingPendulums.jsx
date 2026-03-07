@@ -66,7 +66,7 @@ export default function SwingingPendulums() {
       {/* Bridge walkway */}
       <RigidBody type="fixed" position={[0, 0.8, 78.5]} colliders="cuboid">
         <mesh castShadow receiveShadow>
-          <boxGeometry args={[3, 0.3, 12]} />
+          <boxGeometry args={[3, 0.3, 9]} />
           <meshStandardMaterial color={COLORS.crystalGround} roughness={0.65} metalness={0.05} />
         </mesh>
       </RigidBody>

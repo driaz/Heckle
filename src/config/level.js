@@ -1,35 +1,35 @@
 // ── Color Palette ──────────────────────────────────────────────
 export const COLORS = {
-  // Section 1: Green Meadows — vivid greens and sunny yellow
-  meadowGround: '#4CAF50',
-  meadowPlatform: '#66BB6A',
-  meadowAccent: '#FFD54F',
-  meadowLight: '#81C784',
+  // Section 1: Green Meadows — candy spring greens and sunshine yellow
+  meadowGround: '#58D858',
+  meadowPlatform: '#78F078',
+  meadowAccent: '#FFE55C',
+  meadowLight: '#90F090',
 
-  // Section 2: Crystal Gauntlet — bright blue and vivid purple
-  crystalGround: '#42A5F5',
-  crystalPlatform: '#AB47BC',
-  crystalAccent: '#4FC3F7',
-  crystalLight: '#CE93D8',
+  // Section 2: Crystal Gauntlet — sky blue and bubblegum purple
+  crystalGround: '#5CB8FF',
+  crystalPlatform: '#C85CFF',
+  crystalAccent: '#78D8FF',
+  crystalLight: '#E088FF',
 
-  // Section 3: Lava Peaks — bold red, electric orange, vivid amber
-  lavaGround: '#EF5350',
-  lavaPlatform: '#FF9800',
-  lavaAccent: '#FFC107',
-  lavaLight: '#FF5252',
+  // Section 3: Lava Peaks — cherry red, tangerine orange, sunshine amber
+  lavaGround: '#FF6872',
+  lavaPlatform: '#FFB050',
+  lavaAccent: '#FFD84C',
+  lavaLight: '#FF7880',
 
   // Goal
-  goalGold: '#FFD700',
+  goalGold: '#FFE040',
   goalWhite: '#FFFFFF',
 
   // Shared
-  star: '#FFD700',
-  fog: '#e8f4ff',
-  bouncy: '#FF4081',
-  danger: '#FF1744',
-  enemy: '#8D6E63',
-  conveyor: '#29B6F6',
-  pendulum: '#78909C',
+  star: '#FFE040',
+  fog: '#eef6ff',
+  bouncy: '#FF68A8',
+  danger: '#FF5070',
+  enemy: '#C8A882',
+  conveyor: '#50D0FF',
+  pendulum: '#98B8D0',
 }
 
 // ── Static Platforms (ground plates, transition pads, walkways) ─
@@ -56,7 +56,7 @@ export const PLATFORMS = [
   // Conveyors are in ConveyorPlatforms.jsx
   // Rising Pillars are in RisingPillars.jsx
   { pos: [0, 1.2, 101], size: [3, 0.3, 2], color: COLORS.lavaPlatform },          // Before Rising Pillars
-  { pos: [0, 1.5, 113], size: [3, 0.3, 2], color: COLORS.lavaGround },            // Before Slime Gauntlet
+  { pos: [0, 1.5, 111], size: [3, 0.3, 2], color: COLORS.lavaGround },            // Before Slime Gauntlet
   // Slime path segments are in Enemies.jsx
 
   // Goal approach

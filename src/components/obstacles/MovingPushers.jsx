@@ -37,7 +37,7 @@ export default function MovingPushers() {
       {/* Walkway */}
       <RigidBody type="fixed" position={[0, 0.8, 66]} colliders="cuboid">
         <mesh castShadow receiveShadow>
-          <boxGeometry args={[3, 0.3, 14]} />
+          <boxGeometry args={[3, 0.3, 10]} />
           <meshStandardMaterial color={COLORS.crystalGround} roughness={0.65} metalness={0.05} />
         </mesh>
       </RigidBody>
