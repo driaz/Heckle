@@ -11,9 +11,9 @@ export default function Atmosphere() {
         mieCoefficient={0.005}
         mieDirectionalG={0.8}
       />
-      <Cloud opacity={0.5} speed={0.3} width={20} depth={3} segments={20} position={[0, 20, 30]} />
-      <Cloud opacity={0.4} speed={0.2} width={15} depth={2} segments={15} position={[-15, 18, 80]} />
-      <Cloud opacity={0.45} speed={0.25} width={18} depth={2.5} segments={18} position={[10, 22, 120]} />
+      <Cloud color="#FFFFFF" opacity={0.9} speed={0.3} width={20} depth={3} segments={20} position={[0, 20, 30]} />
+      <Cloud color="#FFFFFF" opacity={0.85} speed={0.2} width={15} depth={2} segments={15} position={[-15, 18, 80]} />
+      <Cloud color="#FFFFFF" opacity={0.9} speed={0.25} width={18} depth={2.5} segments={18} position={[10, 22, 120]} />
 
       {/* Fog — bright blue tint, matching the sky */}
       <fog attach="fog" args={['#c0e8ff', 80, 220]} />

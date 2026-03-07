@@ -14,7 +14,7 @@ export const COLORS = {
 
   // Section 3: Lava Peaks — cherry red, amber orange, bright yellow
   lavaGround: '#FF6872',
-  lavaPlatform: '#FFC000',
+  lavaPlatform: '#FFDE1A',
   lavaAccent: '#FFFF00',
   lavaLight: '#FF7880',
 
