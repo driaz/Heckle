@@ -11,9 +11,9 @@ export default function Atmosphere() {
         mieCoefficient={0.005}
         mieDirectionalG={0.8}
       />
-      <Cloud color="#FFFFFF" opacity={0.9} speed={0.3} width={20} depth={3} segments={20} position={[0, 20, 30]} />
-      <Cloud color="#FFFFFF" opacity={0.85} speed={0.2} width={15} depth={2} segments={15} position={[-15, 18, 80]} />
-      <Cloud color="#FFFFFF" opacity={0.9} speed={0.25} width={18} depth={2.5} segments={18} position={[10, 22, 120]} />
+      <Cloud color="#FFFFFF" opacity={0.6} speed={0.3} width={20} depth={1.5} segments={12} position={[0, 22, 30]} />
+      <Cloud color="#FFFFFF" opacity={0.55} speed={0.2} width={15} depth={1.5} segments={10} position={[-15, 20, 80]} />
+      <Cloud color="#FFFFFF" opacity={0.6} speed={0.25} width={18} depth={1.5} segments={12} position={[10, 24, 120]} />
 
       {/* Fog — bright blue tint, matching the sky */}
       <fog attach="fog" args={['#c0e8ff', 80, 220]} />
@@ -43,7 +43,7 @@ export default function Atmosphere() {
       {/* Ground plane far below the course — bright green distant grass */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -20, 65]} receiveShadow>
         <planeGeometry args={[400, 400]} />
-        <meshStandardMaterial color="#68E068" roughness={0.9} metalness={0} />
+        <meshStandardMaterial color="#50E850" roughness={0.9} metalness={0} />
       </mesh>
     </>
   )
