@@ -39,7 +39,7 @@ export default function Atmosphere() {
 
       {/* White fog floor below the course — course floats above the clouds */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -5, 65]}>
-        <planeGeometry args={[200, 200]} />
+        <planeGeometry args={[1000, 1000]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.85} />
       </mesh>
 
