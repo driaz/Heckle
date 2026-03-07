@@ -14,6 +14,7 @@ import HUD from './components/HUD'
 import GamepadController from './systems/GamepadController'
 import AudioManager from './systems/AudioManager'
 import IdleDetector from './systems/IdleDetector'
+import GameDirectorManager from './systems/GameDirectorManager'
 
 const animationSet = {
   idle: 'Idle',
@@ -90,6 +91,7 @@ function App() {
       </Canvas>
       <HUD />
       <AudioManager />
+      <GameDirectorManager />
     </KeyboardControls>
   )
 }

@@ -16,6 +16,7 @@ export default function HUD() {
   const count = useGameStore((s) => s.starsCollected.size)
   const total = useGameStore((s) => s.totalStars)
   const falls = useGameStore((s) => s.fallCount)
+  const micActive = useGameStore((s) => s.micActive)
 
   return (
     <div
@@ -37,6 +38,11 @@ export default function HUD() {
       {falls > 0 && (
         <div style={pillStyle}>
           💀 {falls}
+        </div>
+      )}
+      {micActive && (
+        <div style={pillStyle}>
+          🎤
         </div>
       )}
     </div>
