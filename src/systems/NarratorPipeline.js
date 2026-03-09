@@ -25,23 +25,53 @@ ALWAYS:
 - No filler words to start sentences. Hit hard immediately.
 - Never explain the game or give advice. You're a commentator, not a guide.`
 
+let speechStartListeners = []
+let speechEndListeners = []
+
+function onSpeechStart(cb) { if (cb) speechStartListeners.push(cb) }
+function onSpeechEnd(cb) { if (cb) speechEndListeners.push(cb) }
+function offSpeechStart(cb) { speechStartListeners = speechStartListeners.filter(x => x !== cb) }
+function offSpeechEnd(cb) { speechEndListeners = speechEndListeners.filter(x => x !== cb) }
+
 async function init() {
-  await NarratorTTS.connect()
+  // Wire TTS audio events to pipeline speech events
+  NarratorTTS.onAudioStart(() => speechStartListeners.forEach(cb => cb()))
+  NarratorTTS.onAudioEnd(() => speechEndListeners.forEach(cb => cb()))
+
+  // TTS connects lazily on first speak() — no eager connection needed
+  // (ElevenLabs times out the WS after 20s without text input)
+
+  // Dev console helper
+  window.heckleSetProvider = (provider) => {
+    NarratorLLM.setProvider(provider)
+    console.log('[Pipeline] Provider set to:', provider)
+  }
+
   console.log('[Pipeline] Initialized')
 }
 
 async function narrate(prompt) {
   console.log('[Pipeline] Narrating:', prompt)
-  const textStream = NarratorLLM.generate(prompt, SYSTEM_PROMPT)
-  await NarratorTTS.speak(textStream)
+  try {
+    const textStream = NarratorLLM.generate(prompt, SYSTEM_PROMPT)
+    await NarratorTTS.speak(textStream)
+  } catch (err) {
+    console.error('[Pipeline] Narration error:', err)
+    // Fire speech end to reset state
+    speechEndListeners.forEach(cb => cb())
+  }
 }
 
 function stop() {
   NarratorTTS.stop()
 }
 
+function disconnect() {
+  NarratorTTS.disconnect()
+}
+
 function setProvider(provider) {
   NarratorLLM.setProvider(provider)
 }
 
-export default { init, narrate, stop, setProvider }
+export default { init, narrate, stop, disconnect, setProvider, onSpeechStart, onSpeechEnd, offSpeechStart, offSpeechEnd }

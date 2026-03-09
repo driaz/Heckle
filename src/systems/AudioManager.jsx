@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import narratorVoice from './NarratorVoice'
+import narratorPipeline from './NarratorPipeline'
 
 const MUSIC_URL = '/audio/Sunny Steps.mp3'
 const MUSIC_VOLUME = 0.3
@@ -61,12 +61,15 @@ export default function AudioManager() {
       fadeRef.current = requestAnimationFrame(step)
     }
 
-    narratorVoice.onSpeechStart(() => fadeMusic(DUCK_VOLUME, DUCK_DOWN_MS))
-    narratorVoice.onSpeechEnd(() => fadeMusic(MUSIC_VOLUME, DUCK_UP_MS))
+    const onStart = () => fadeMusic(DUCK_VOLUME, DUCK_DOWN_MS)
+    const onEnd = () => fadeMusic(MUSIC_VOLUME, DUCK_UP_MS)
+
+    narratorPipeline.onSpeechStart(onStart)
+    narratorPipeline.onSpeechEnd(onEnd)
 
     return () => {
-      narratorVoice.onSpeechStart(null)
-      narratorVoice.onSpeechEnd(null)
+      narratorPipeline.offSpeechStart(onStart)
+      narratorPipeline.offSpeechEnd(onEnd)
       if (fadeRef.current) cancelAnimationFrame(fadeRef.current)
     }
   }, [])

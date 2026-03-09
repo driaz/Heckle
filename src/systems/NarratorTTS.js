@@ -6,7 +6,16 @@ let ws = null
 let audioContext = null
 let nextPlayTime = 0
 let stopping = false
-let keepaliveInterval = null
+
+// Speech event tracking
+let audioStartCallback = null
+let audioEndCallback = null
+let speechStarted = false
+let flushed = false
+let speechEndTimer = null
+
+function onAudioStart(cb) { audioStartCallback = cb }
+function onAudioEnd(cb) { audioEndCallback = cb }
 
 function ensureAudioContext() {
   if (!audioContext) {
@@ -15,6 +24,23 @@ function ensureAudioContext() {
   if (audioContext.state === 'suspended') {
     audioContext.resume()
   }
+}
+
+function scheduleSpeechEnd() {
+  clearTimeout(speechEndTimer)
+  if (!speechStarted) return
+
+  const remaining = audioContext
+    ? Math.max(0, (nextPlayTime - audioContext.currentTime) * 1000)
+    : 0
+
+  speechEndTimer = setTimeout(() => {
+    if (speechStarted) {
+      speechStarted = false
+      flushed = false
+      audioEndCallback?.()
+    }
+  }, remaining + 200)
 }
 
 function openWebSocket() {
@@ -31,14 +57,6 @@ function openWebSocket() {
         },
         xi_api_key: import.meta.env.VITE_ELEVENLABS_API_KEY,
       }))
-
-      // Keepalive every 15s to prevent 20s idle timeout
-      clearInterval(keepaliveInterval)
-      keepaliveInterval = setInterval(() => {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ text: ' ' }))
-        }
-      }, 15000)
 
       console.log('[TTS] Connected')
       resolve()
@@ -62,8 +80,6 @@ function openWebSocket() {
     ws.onclose = (event) => {
       console.log('[TTS] WebSocket closed, code:', event.code, 'reason:', event.reason)
       ws = null
-      clearInterval(keepaliveInterval)
-      keepaliveInterval = null
     }
   })
 }
@@ -71,6 +87,12 @@ function openWebSocket() {
 function queueAudioChunk(base64Data) {
   if (stopping) return
   ensureAudioContext()
+
+  // Fire speech start on first audio chunk
+  if (!speechStarted) {
+    speechStarted = true
+    audioStartCallback?.()
+  }
 
   const binaryString = atob(base64Data)
   const bytes = new Uint8Array(binaryString.length)
@@ -96,6 +118,9 @@ function queueAudioChunk(base64Data) {
   const startTime = Math.max(now, nextPlayTime)
   source.start(startTime)
   nextPlayTime = startTime + buffer.duration
+
+  // If flush was already sent, reschedule speech end with updated playback time
+  if (flushed) scheduleSpeechEnd()
 }
 
 async function connect() {
@@ -112,12 +137,14 @@ async function speak(textStream) {
   }
 
   stopping = false
+  flushed = false
+  speechStarted = false
   nextPlayTime = 0
+  clearTimeout(speechEndTimer)
 
   for await (const chunk of textStream) {
     if (stopping) break
     if (chunk && ws && ws.readyState === WebSocket.OPEN) {
-      console.log('[TTS] Sending chunk:', chunk)
       ws.send(JSON.stringify({
         text: chunk,
         try_trigger_generation: true,
@@ -129,7 +156,6 @@ async function speak(textStream) {
 
   // Flush remaining buffered text
   if (ws && ws.readyState === WebSocket.OPEN) {
-    console.log('[TTS] Sending flush')
     ws.send(JSON.stringify({
       text: '',
       flush: true,
@@ -137,17 +163,25 @@ async function speak(textStream) {
   } else {
     console.warn('[TTS] WS not open for flush. State:', ws?.readyState)
   }
+
+  // Mark flush sent — audio chunks may still arrive from ElevenLabs
+  flushed = true
+  if (speechStarted) scheduleSpeechEnd()
 }
 
 function stop() {
   stopping = true
   nextPlayTime = 0
+  clearTimeout(speechEndTimer)
+  if (speechStarted) {
+    speechStarted = false
+    flushed = false
+    audioEndCallback?.()
+  }
 }
 
 function disconnect() {
   stop()
-  clearInterval(keepaliveInterval)
-  keepaliveInterval = null
   if (ws) {
     ws.close()
     ws = null
@@ -158,4 +192,4 @@ function disconnect() {
   }
 }
 
-export default { connect, speak, stop, disconnect }
+export default { connect, speak, stop, disconnect, onAudioStart, onAudioEnd }

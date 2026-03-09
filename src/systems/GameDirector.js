@@ -1,5 +1,5 @@
 import { eventBus } from './events'
-import narratorVoice from './NarratorVoice'
+import narratorPipeline from './NarratorPipeline'
 import useGameStore from '../stores/gameStore'
 
 const MIN_GAP_MS = 4000
@@ -153,13 +153,10 @@ function handleEvent(event) {
   lastNarrationTime = Date.now()
   isSpeaking = true
 
-  narratorVoice.send(prompt)
+  narratorPipeline.narrate(prompt)
 }
 
-export function onTurnComplete() {
-  isSpeaking = false
-}
-
+// Keep these for Phase 3 (voice input)
 export function setPlayerSpeaking() {
   playerSpeaking = true
   lastPlayerSpeechTime = Date.now()
@@ -176,7 +173,14 @@ function start() {
   if (unsubscribe) return
   console.log('[GameDirector] Started')
   unsubscribe = eventBus.onAny(handleEvent)
-  narratorVoice.connect()
+
+  narratorPipeline.onSpeechEnd(() => {
+    isSpeaking = false
+  })
+
+  narratorPipeline.init().catch(err => {
+    console.error('[GameDirector] Pipeline init error:', err)
+  })
 }
 
 function stop() {
@@ -184,7 +188,7 @@ function stop() {
     unsubscribe()
     unsubscribe = null
   }
-  narratorVoice.disconnect()
+  narratorPipeline.disconnect()
   console.log('[GameDirector] Stopped')
 }
 
