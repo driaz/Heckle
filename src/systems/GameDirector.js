@@ -107,6 +107,12 @@ function shouldNarrate(event) {
     return false
   }
 
+  // Skip events while player is in conversation with narrator
+  if (narratorPipeline.isInConversation()) {
+    console.log('[GameDirector] Skip: in conversation mode')
+    return false
+  }
+
   if (playerSpeaking || (now - lastPlayerSpeechTime < 5000)) {
     console.log('[GameDirector] Skip: player speaking or just finished')
     return false
