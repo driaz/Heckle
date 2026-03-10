@@ -49,6 +49,7 @@ const CONVERSATION_COOLDOWN_MS = 5000
 // Narration tracking — for interruption logic
 let currentNarrationType = null // 'event' | 'speech' | null
 let narrationGen = 0
+let narrationStartTime = 0
 
 function onSpeechStart(cb) { if (cb) speechStartListeners.push(cb) }
 function onSpeechEnd(cb) { if (cb) speechEndListeners.push(cb) }
@@ -61,11 +62,13 @@ function isPlayerSpeaking() { return NarratorSTT.isPlayerSpeaking() }
 async function init() {
   // Wire TTS audio events to pipeline speech events
   NarratorTTS.onAudioStart(() => {
+    console.log(`[Pipeline] TTS audio started — muting mic (gen ${narrationGen}, type: ${currentNarrationType})`)
     speechStartListeners.forEach(cb => cb())
     // Mute STT mic while narrator is speaking (echo prevention)
     NarratorSTT.setMuted(true)
   })
   NarratorTTS.onAudioEnd(() => {
+    console.log(`[Pipeline] TTS audio ended — unmuting mic (gen ${narrationGen}, type: ${currentNarrationType})`)
     speechEndListeners.forEach(cb => cb())
     // Unmute STT mic after narrator finishes
     NarratorSTT.setMuted(false)
@@ -94,12 +97,17 @@ async function init() {
 }
 
 function handlePlayerSpeech(transcript) {
-  console.log('[Pipeline] Player said:', transcript)
+  const age = narrationStartTime ? Date.now() - narrationStartTime : 0
+  console.log(`[Pipeline] Transcript arrived: "${transcript}"`)
+  console.log(`[Pipeline]   Current narration: ${currentNarrationType || 'none'}, gen ${narrationGen}, started ${age}ms ago`)
+  console.log(`[Pipeline]   STT muted: ${NarratorSTT.isMuted?.() ?? 'unknown'}`)
 
   // Interrupt any in-flight narration — player speech always takes priority
   if (currentNarrationType) {
-    console.log(`[Pipeline] Interrupting ${currentNarrationType} narration for player speech`)
+    console.log(`[Pipeline] Gen ${narrationGen}: Interrupting ${currentNarrationType} narration for player speech — calling TTS.stop()`)
     NarratorTTS.stop()
+  } else {
+    console.log(`[Pipeline] No narration in-flight, nothing to interrupt`)
   }
 
   // Enter conversation mode — pauses game event narration
@@ -135,17 +143,23 @@ async function narrate(prompt, type = 'event') {
     return
   }
 
+  const oldGen = narrationGen
+  const oldType = currentNarrationType
   const myGen = ++narrationGen
   currentNarrationType = type
+  narrationStartTime = Date.now()
 
-  console.log('[Pipeline] Narrating:', prompt)
+  console.log(`[Pipeline] Gen ${myGen}: Starting ${type} narration (was: ${oldType || 'none'} gen ${oldGen})`)
   try {
     const textStream = NarratorLLM.generate(prompt, SYSTEM_PROMPT)
 
     // Wrap the LLM stream so it cancels if a newer narration starts
     async function* cancellableStream() {
       for await (const chunk of textStream) {
-        if (narrationGen !== myGen) return // superseded
+        if (narrationGen !== myGen) {
+          console.log(`[LLM] Gen ${myGen}: Cancelled (superseded by gen ${narrationGen})`)
+          return
+        }
         yield chunk
       }
     }

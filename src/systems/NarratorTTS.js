@@ -170,6 +170,8 @@ async function speak(textStream) {
 }
 
 function stop() {
+  const wasPlaying = speechStarted
+  console.log(`[TTS] stop() called, wasPlaying: ${wasPlaying}`)
   stopping = true
   nextPlayTime = 0
   clearTimeout(speechEndTimer)

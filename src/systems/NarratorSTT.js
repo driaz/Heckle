@@ -223,4 +223,6 @@ function stopListening() {
   console.log('[STT] Stopped')
 }
 
-export default { startListening, stopListening, onTranscript, isListening, isPlayerSpeaking, setMuted }
+function isMuted() { return muted }
+
+export default { startListening, stopListening, onTranscript, isListening, isPlayerSpeaking, isMuted, setMuted }
