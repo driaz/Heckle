@@ -42,6 +42,7 @@ function offSpeechStart(cb) { speechStartListeners = speechStartListeners.filter
 function offSpeechEnd(cb) { speechEndListeners = speechEndListeners.filter(x => x !== cb) }
 
 function isInConversation() { return inConversation }
+function isPlayerSpeaking() { return NarratorSTT.isPlayerSpeaking() }
 
 async function init() {
   // Wire TTS audio events to pipeline speech events
@@ -142,5 +143,5 @@ function setProvider(provider) {
 export default {
   init, narrate, stop, disconnect, setProvider,
   onSpeechStart, onSpeechEnd, offSpeechStart, offSpeechEnd,
-  startListening, stopListening, isInConversation,
+  startListening, stopListening, isInConversation, isPlayerSpeaking,
 }

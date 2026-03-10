@@ -13,9 +13,12 @@ let transcriptCallback = null
 let muted = false
 let listening = false
 let reconnecting = false
+let lastPartialTime = 0
+const SPEAKING_THRESHOLD_MS = 2000
 
 function onTranscript(cb) { transcriptCallback = cb }
 function isListening() { return listening }
+function isPlayerSpeaking() { return Date.now() - lastPartialTime < SPEAKING_THRESHOLD_MS }
 function setMuted(val) {
   const prev = muted
   muted = val
@@ -100,6 +103,7 @@ async function connectWebSocket() {
       }
 
       if (data.message_type === 'partial_transcript' && data.text?.trim()) {
+        lastPartialTime = Date.now()
         console.log('[STT] Partial:', data.text)
       }
 
@@ -219,4 +223,4 @@ function stopListening() {
   console.log('[STT] Stopped')
 }
 
-export default { startListening, stopListening, onTranscript, isListening, setMuted }
+export default { startListening, stopListening, onTranscript, isListening, isPlayerSpeaking, setMuted }

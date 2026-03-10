@@ -9,8 +9,6 @@ let lastNarrationTime = 0
 let isSpeaking = false
 let firstFallSeen = false
 let firstIdleSeen = false
-let playerSpeaking = false
-let lastPlayerSpeechTime = 0
 
 function buildPrompt(event) {
   const store = useGameStore.getState()
@@ -113,8 +111,9 @@ function shouldNarrate(event) {
     return false
   }
 
-  if (playerSpeaking || (now - lastPlayerSpeechTime < 5000)) {
-    console.log('[GameDirector] Skip: player speaking or just finished')
+  // Don't start narrating while the player is mid-sentence
+  if (narratorPipeline.isPlayerSpeaking()) {
+    console.log('[GameDirector] Skip: player is speaking')
     return false
   }
 
@@ -160,19 +159,6 @@ function handleEvent(event) {
   isSpeaking = true
 
   narratorPipeline.narrate(prompt)
-}
-
-// Keep these for Phase 3 (voice input)
-export function setPlayerSpeaking() {
-  playerSpeaking = true
-  lastPlayerSpeechTime = Date.now()
-  console.log('[GameDirector] Player speaking')
-}
-
-export function setPlayerNotSpeaking() {
-  playerSpeaking = false
-  lastPlayerSpeechTime = Date.now()
-  console.log('[GameDirector] Player stopped speaking')
 }
 
 function start() {
