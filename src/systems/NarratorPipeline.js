@@ -46,6 +46,18 @@ let inConversation = false
 let conversationCooldownTimer = null
 const CONVERSATION_COOLDOWN_MS = 5000
 
+// Event context — for combined prompts when player responds to narration
+let lastEventPrompt = null
+let lastEventEndTime = 0
+let lastNarrationSource = null // 'event' | 'speech'
+
+// Is TTS audio currently playing?
+let isSpeechActive = false
+
+// Queued player speech — fires after current narration ends
+let pendingFollowUp = null
+const EVENT_CONTEXT_WINDOW_MS = 5000
+
 function onSpeechStart(cb) { if (cb) speechStartListeners.push(cb) }
 function onSpeechEnd(cb) { if (cb) speechEndListeners.push(cb) }
 function offSpeechStart(cb) { speechStartListeners = speechStartListeners.filter(x => x !== cb) }
@@ -54,17 +66,38 @@ function offSpeechEnd(cb) { speechEndListeners = speechEndListeners.filter(x => 
 function isInConversation() { return inConversation }
 function isPlayerSpeaking() { return NarratorSTT.isPlayerSpeaking() }
 
+function startConversationCooldown() {
+  conversationCooldownTimer = setTimeout(() => {
+    inConversation = false
+    console.log('[Pipeline] Conversation cooldown ended, resuming events')
+  }, CONVERSATION_COOLDOWN_MS)
+}
+
 async function init() {
   // Wire TTS audio events to pipeline speech events
   NarratorTTS.onAudioStart(() => {
+    isSpeechActive = true
     speechStartListeners.forEach(cb => cb())
     // Mute STT mic while narrator is speaking (echo prevention)
     NarratorSTT.setMuted(true)
   })
   NarratorTTS.onAudioEnd(() => {
+    if (lastNarrationSource === 'event') {
+      lastEventEndTime = Date.now()
+    }
+    isSpeechActive = false
+
     speechEndListeners.forEach(cb => cb())
     // Unmute STT mic after narrator finishes
     NarratorSTT.setMuted(false)
+
+    // Fire queued player response now that narration is done
+    if (pendingFollowUp) {
+      const prompt = pendingFollowUp
+      pendingFollowUp = null
+      console.log('[Pipeline] Firing queued player response')
+      narrate(prompt, 'speech').then(startConversationCooldown)
+    }
   })
 
   // Wire STT transcripts to conversation handler
@@ -101,19 +134,35 @@ function handlePlayerSpeech(transcript) {
   const sessionTime = Math.floor((Date.now() - store.sessionStart) / 1000)
   const context = `[Session: ${sessionTime}s, Stars: ${store.starsCollected.size}/${store.totalStars}, Deaths: ${store.deathCount}]`
 
-  const prompt = `${context} The player said: "${transcript}". Respond to what they said. You can reference the current game state.`
+  // Check if player is responding to a recent event narration
+  const hasRecentEvent = lastEventPrompt && (
+    isSpeechActive || (Date.now() - lastEventEndTime < EVENT_CONTEXT_WINDOW_MS)
+  )
 
-  // Send through the LLM → TTS pipeline
-  narrate(prompt).then(() => {
-    // After narrator finishes responding, start cooldown before resuming events
-    conversationCooldownTimer = setTimeout(() => {
-      inConversation = false
-      console.log('[Pipeline] Conversation cooldown ended, resuming events')
-    }, CONVERSATION_COOLDOWN_MS)
-  })
+  let prompt
+  if (hasRecentEvent) {
+    prompt = `${context} You just commented on: "${lastEventPrompt}". The player responded: "${transcript}". Reply to what they said. One sentence.`
+    console.log('[Pipeline] Combined prompt (player responding to event narration)')
+  } else {
+    prompt = `${context} The player said: "${transcript}". Respond to what they said. You can reference the current game state.`
+  }
+
+  if (isSpeechActive) {
+    // Queue — only keep the latest, fires when current narration ends
+    console.log('[Pipeline] Queuing player response (narrator still speaking)')
+    pendingFollowUp = prompt
+  } else {
+    // Send immediately
+    narrate(prompt, 'speech').then(startConversationCooldown)
+  }
 }
 
-async function narrate(prompt) {
+async function narrate(prompt, source = 'event') {
+  lastNarrationSource = source
+  if (source === 'event') {
+    lastEventPrompt = prompt
+  }
+
   console.log('[Pipeline] Narrating:', prompt)
   try {
     const textStream = NarratorLLM.generate(prompt, SYSTEM_PROMPT)
@@ -144,6 +193,7 @@ function disconnect() {
   NarratorTTS.disconnect()
   clearTimeout(conversationCooldownTimer)
   inConversation = false
+  pendingFollowUp = null
 }
 
 function setProvider(provider) {
