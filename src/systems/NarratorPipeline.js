@@ -68,6 +68,13 @@ async function init() {
     console.log('[Pipeline] Provider set to:', provider)
   }
 
+  // Auto-start mic — browser will prompt for permission on first load
+  try {
+    await startListening()
+  } catch (err) {
+    console.warn('[Pipeline] Mic auto-start failed (user may have denied):', err.message)
+  }
+
   console.log('[Pipeline] Initialized')
 }
 
