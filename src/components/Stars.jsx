@@ -4,6 +4,7 @@ import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import { Sparkles } from '@react-three/drei'
 import { STARS, COLORS } from '../config/level'
 import useGameStore from '../stores/gameStore'
+import SFX from '../systems/SFX'
 
 function Star({ position, index }) {
   const groupRef = useRef()
@@ -29,7 +30,7 @@ function Star({ position, index }) {
       <CuboidCollider
         args={[0.5, 0.5, 0.5]}
         sensor
-        onIntersectionEnter={() => collectStar(index)}
+        onIntersectionEnter={() => { collectStar(index); SFX.playStarChime() }}
       />
       <group ref={groupRef}>
         {/* Gold octahedron */}
