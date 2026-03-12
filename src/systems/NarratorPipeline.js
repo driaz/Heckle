@@ -165,8 +165,25 @@ async function narrate(prompt, source = 'event') {
 
   console.log('[Pipeline] Narrating:', prompt)
   try {
-    const textStream = NarratorLLM.generate(prompt, SYSTEM_PROMPT)
-    await NarratorTTS.speak(textStream)
+    const rawStream = NarratorLLM.generate(prompt, SYSTEM_PROMPT)
+    let fullText = ''
+
+    async function* cleanStream() {
+      for await (const chunk of rawStream) {
+        if (!chunk) continue
+        // Strip markdown formatting, emoji, and repeated special chars
+        const cleaned = chunk
+          .replace(/[*_`~\[\]#>]/g, '')          // markdown symbols
+          .replace(/\p{Emoji_Presentation}/gu, '') // emoji
+          .replace(/[^\w\s.,!?''"""';\-:…—]/g, '') // non-speech symbols
+          .replace(/([^\w\s])\1{2,}/g, '$1')       // repeated special chars
+        fullText += cleaned
+        if (cleaned) yield cleaned
+      }
+      console.log('[Pipeline] Narrator text:', fullText)
+    }
+
+    await NarratorTTS.speak(cleanStream())
   } catch (err) {
     console.error('[Pipeline] Narration error:', err)
     // Fire speech end to reset state
