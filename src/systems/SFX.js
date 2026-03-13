@@ -1,4 +1,6 @@
 let audioContext = null
+let jumpBuffer = null
+let coinBuffer = null
 
 function ensureContext() {
   if (!audioContext) {
@@ -10,34 +12,45 @@ function ensureContext() {
   return audioContext
 }
 
-function playStarChime() {
+async function loadBuffer(url) {
   const ctx = ensureContext()
-  const now = ctx.currentTime
-  const volume = 0.15
-
-  // First tone: C5 (523Hz)
-  const osc1 = ctx.createOscillator()
-  const gain1 = ctx.createGain()
-  osc1.type = 'sine'
-  osc1.frequency.value = 523
-  gain1.gain.setValueAtTime(volume, now)
-  gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.1)
-  osc1.connect(gain1)
-  gain1.connect(ctx.destination)
-  osc1.start(now)
-  osc1.stop(now + 0.1)
-
-  // Second tone: E5 (659Hz) — rising major third
-  const osc2 = ctx.createOscillator()
-  const gain2 = ctx.createGain()
-  osc2.type = 'sine'
-  osc2.frequency.value = 659
-  gain2.gain.setValueAtTime(volume, now + 0.08)
-  gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.18)
-  osc2.connect(gain2)
-  gain2.connect(ctx.destination)
-  osc2.start(now + 0.08)
-  osc2.stop(now + 0.18)
+  const res = await fetch(url)
+  const arrayBuffer = await res.arrayBuffer()
+  return ctx.decodeAudioData(arrayBuffer)
 }
 
-export default { playStarChime }
+async function init() {
+  try {
+    const [jump, coin] = await Promise.all([
+      loadBuffer('/audio/jump.wav'),
+      loadBuffer('/audio/coin.wav'),
+    ])
+    jumpBuffer = jump
+    coinBuffer = coin
+    console.log('[SFX] Loaded jump and coin audio')
+  } catch (err) {
+    console.error('[SFX] Failed to load audio:', err)
+  }
+}
+
+function play(buffer, volume = 0.3) {
+  if (!buffer) return
+  const ctx = ensureContext()
+  const source = ctx.createBufferSource()
+  const gain = ctx.createGain()
+  gain.gain.value = volume
+  source.buffer = buffer
+  source.connect(gain)
+  gain.connect(ctx.destination)
+  source.start()
+}
+
+function playJump() {
+  play(jumpBuffer, 0.25)
+}
+
+function playStarChime() {
+  play(coinBuffer, 0.35)
+}
+
+export default { init, playJump, playStarChime }

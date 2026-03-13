@@ -17,6 +17,10 @@ import GamepadController from './systems/GamepadController'
 import AudioManager from './systems/AudioManager'
 import IdleDetector from './systems/IdleDetector'
 import GameDirectorManager from './systems/GameDirectorManager'
+import JumpSFX from './systems/JumpSFX'
+import SFX from './systems/SFX'
+
+SFX.init()
 
 const animationSet = {
   idle: 'Idle',
@@ -87,6 +91,7 @@ function App() {
             <Stars />
             <FallDetector />
             <IdleDetector />
+            <JumpSFX />
             <Atmosphere />
           </Physics>
           <SceneDressing />
