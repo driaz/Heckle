@@ -86,15 +86,6 @@ function Bush({ position, scale = 1 }) {
   )
 }
 
-function Rock({ position, scale = 1, rotation = [0.3, 0.5, 0.1] }) {
-  return (
-    <mesh position={position} rotation={rotation} castShadow>
-      <dodecahedronGeometry args={[0.3 * scale, 0]} />
-      <meshStandardMaterial color="#8a8078" roughness={0.65} metalness={0.05} />
-    </mesh>
-  )
-}
-
 /* ── Main component ────────────────────────────────────────────── */
 
 export default function SceneDressing() {
@@ -142,12 +133,6 @@ export default function SceneDressing() {
       <Bush position={[4, -0.1, 5]} scale={0.7} />
       <Bush position={[-3.5, -0.2, 22]} scale={0.9} />
 
-      {/* ─── Rocks (lava section scatter) ─── */}
-      <Rock position={[-3.5, 0.8, 88]} scale={1.2} />
-      <Rock position={[3, 0.8, 91]} scale={0.8} rotation={[0.5, 0.2, 0.3]} />
-      <Rock position={[-3, 1.0, 102]} scale={1.0} />
-      <Rock position={[3.5, 1.2, 108]} scale={0.9} rotation={[0.1, 0.8, 0.2]} />
-      <Rock position={[-3, 1.3, 114]} scale={1.1} rotation={[0.4, 0.1, 0.6]} />
     </>
   )
 }
