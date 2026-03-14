@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { STARS } from '../config/level'
+import { STARS, getAreaName } from '../config/level'
 import { eventBus, EventType } from '../systems/events'
 
 const useGameStore = create((set, get) => ({
@@ -34,6 +34,7 @@ const useGameStore = create((set, get) => ({
       next.add(index)
       const totalCollected = next.size
 
+      const starPos = STARS[index]
       const event = {
         type: EventType.COLLECT,
         timestamp: now,
@@ -41,6 +42,7 @@ const useGameStore = create((set, get) => ({
         totalCollected,
         totalStars: state.totalStars,
         isLast: totalCollected === state.totalStars,
+        area: starPos ? getAreaName(starPos) : null,
       }
 
       // Update session memory
@@ -79,10 +81,12 @@ const useGameStore = create((set, get) => ({
         ? (now - state.lastDeathTime) / 1000
         : null
 
+      const area = position ? getAreaName(position) : null
       const event = {
         type: EventType.FALL,
         timestamp: now,
         position: position ? [position.x, position.y, position.z] : null,
+        area,
         fallCount: newFallCount,
         deathCount: newDeathCount,
         timeSinceLastDeath,
@@ -97,14 +101,13 @@ const useGameStore = create((set, get) => ({
         mem.bestDeathStreak = mem.deathStreak
       }
 
-      if (position) {
-        const posKey = `${Math.round(position.x)},${Math.round(position.y)},${Math.round(position.z)}`
-        mem.troubleSpots[posKey] = (mem.troubleSpots[posKey] || 0) + 1
-        if (mem.troubleSpots[posKey] >= 3) {
-          const count = mem.troubleSpots[posKey]
+      if (area) {
+        mem.troubleSpots[area] = (mem.troubleSpots[area] || 0) + 1
+        if (mem.troubleSpots[area] >= 3) {
+          const count = mem.troubleSpots[area]
           mem.significantMoments = [
             ...mem.significantMoments,
-            `Player has fallen from the area near [${posKey}] ${count} times`,
+            `Player has fallen from ${area} ${count} times`,
           ]
         }
       }
@@ -146,6 +149,7 @@ const useGameStore = create((set, get) => ({
         timestamp: Date.now(),
         duration,
         position: position ? [position.x, position.y, position.z] : null,
+        area: position ? getAreaName(position) : null,
       }
 
       // Update session memory
@@ -187,6 +191,7 @@ const useGameStore = create((set, get) => ({
         timestamp: now,
         hazardName,
         position: position ? [position.x, position.y, position.z] : null,
+        area: position ? getAreaName(position) : null,
         deathCount: newDeathCount,
         hazardSpecificCount: hazardDeaths[hazardName],
       }

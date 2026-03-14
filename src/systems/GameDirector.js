@@ -22,47 +22,49 @@ function buildPrompt(event) {
 
   switch (event.type) {
     case 'fall': {
-      if (event.position) {
-        const posKey = `${Math.round(event.position[0])},${Math.round(event.position[1])},${Math.round(event.position[2])}`
-        const spotCount = mem.troubleSpots[posKey] || 0
+      const area = event.area || 'unknown area'
+      if (event.area) {
+        const spotCount = mem.troubleSpots[event.area] || 0
         if (spotCount >= 3) {
-          memoryContext = ` [RECURRING: Player has fallen from this same spot ${spotCount} times this session.]`
+          memoryContext = ` [RECURRING: Player has fallen from ${event.area} ${spotCount} times this session.]`
         }
       }
       if (mem.deathStreak >= 3) {
         memoryContext += ` [STREAK: ${mem.deathStreak} deaths in a row without collecting a star.]`
       }
       if (event.rapidDeath) {
-        return `${baseContext}${memoryContext} RAPID DEATH — fell again only ${event.timeSinceLastDeath.toFixed(1)}s after the last death. Fall #${event.fallCount}.`
+        return `${baseContext}${memoryContext} RAPID DEATH — fell off ${area} again only ${event.timeSinceLastDeath.toFixed(1)}s after the last death. Fall #${event.fallCount}.`
       }
       if (event.fallCount === 1) {
-        return `${baseContext} First death of the session.`
+        return `${baseContext} First death of the session at ${area}.`
       }
-      return `${baseContext}${memoryContext} Fell off a platform. Death #${event.fallCount}.`
+      return `${baseContext}${memoryContext} Fell off ${area}. Death #${event.fallCount}.`
     }
 
     case 'collect': {
+      const area = event.area ? ` in ${event.area}` : ''
       if (event.isLast) {
         const deathsItTook = store.deathCount
-        return `${baseContext} FINAL STAR — all ${event.totalStars} collected! It took ${deathsItTook} deaths to get here.`
+        return `${baseContext} FINAL STAR${area} — all ${event.totalStars} collected! It took ${deathsItTook} deaths to get here.`
       }
       if (mem.bestDeathStreak >= 3) {
         memoryContext = ` [Player just broke a ${mem.bestDeathStreak}-death streak by finally collecting a star.]`
       }
       if (event.totalCollected === 1) {
-        return `${baseContext}${memoryContext} Collected their first star. Only ${event.totalStars - 1} to go.`
+        return `${baseContext}${memoryContext} Collected their first star${area}. Only ${event.totalStars - 1} to go.`
       }
-      return `${baseContext}${memoryContext} Star ${event.totalCollected}/${event.totalStars} collected.`
+      return `${baseContext}${memoryContext} Star ${event.totalCollected}/${event.totalStars} collected${area}.`
     }
 
     case 'idle': {
+      const area = event.area ? ` at ${event.area}` : ''
       if (store.deathCount > 5 && event.duration > 10) {
         memoryContext = ` [Player has died ${store.deathCount} times and is now just standing still. Probably frustrated.]`
       }
       if (event.duration > 30) {
-        return `${baseContext}${memoryContext} Standing still for ${Math.floor(event.duration)} seconds.`
+        return `${baseContext}${memoryContext} Standing still for ${Math.floor(event.duration)} seconds${area}.`
       }
-      return `${baseContext}${memoryContext} Idle for ${Math.floor(event.duration)} seconds.`
+      return `${baseContext}${memoryContext} Idle for ${Math.floor(event.duration)} seconds${area}.`
     }
 
     case 'respawn': {
@@ -73,13 +75,14 @@ function buildPrompt(event) {
     }
 
     case 'hazard_death': {
+      const area = event.area ? ` at ${event.area}` : ''
       if (event.hazardSpecificCount >= 3) {
         memoryContext = ` [NEMESIS: Player has been killed by "${event.hazardName}" ${event.hazardSpecificCount} times now.]`
       }
       if (mem.deathStreak >= 3) {
         memoryContext += ` [STREAK: ${mem.deathStreak} deaths in a row.]`
       }
-      return `${baseContext}${memoryContext} Killed by "${event.hazardName}". Death #${event.deathCount}.`
+      return `${baseContext}${memoryContext} Killed by "${event.hazardName}"${area}. Death #${event.deathCount}.`
     }
 
     case 'enemy_kill': {

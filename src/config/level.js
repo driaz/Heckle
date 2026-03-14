@@ -99,3 +99,30 @@ export const OBSTACLE_NAMES = {
   risingPillars: 'Rising Pillars',
   slimeGauntlet: 'The Slime Gauntlet',
 }
+
+// ── Area lookup by Z coordinate ──────────────────────────────
+const AREA_ZONES = [
+  { maxZ: 5, name: 'Start Island' },
+  { maxZ: 10, name: 'Approach Platform' },
+  { maxZ: 19, name: 'The Wobbly Bridge' },
+  { maxZ: 23, name: 'Landing Platform' },
+  { maxZ: 31, name: 'Bouncy Meadow' },
+  { maxZ: 41, name: 'Spinning Lily Pads' },
+  { maxZ: 47, name: 'Crystal Gauntlet entrance' },
+  { maxZ: 58, name: 'Vanishing Steps' },
+  { maxZ: 73, name: 'The Gauntlet' },
+  { maxZ: 83, name: 'Pendulum Alley' },
+  { maxZ: 90, name: 'Lava Peaks entrance' },
+  { maxZ: 101, name: 'Conveyor Crush' },
+  { maxZ: 110, name: 'Rising Pillars' },
+  { maxZ: 123, name: 'The Slime Gauntlet' },
+  { maxZ: 128, name: 'Final Approach' },
+]
+
+export function getAreaName(position) {
+  const z = Array.isArray(position) ? position[2] : (position?.z ?? 0)
+  for (const zone of AREA_ZONES) {
+    if (z <= zone.maxZ) return zone.name
+  }
+  return 'Goal Area'
+}
