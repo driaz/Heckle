@@ -68,24 +68,6 @@ function FlagPost({ position, flagColor, height = 2.5 }) {
   )
 }
 
-function Bush({ position, scale = 1 }) {
-  return (
-    <group position={position}>
-      <mesh castShadow>
-        <sphereGeometry args={[0.35 * scale, 7, 6]} />
-        <meshStandardMaterial color="#4a7a48" roughness={0.65} metalness={0.05} />
-      </mesh>
-      <mesh
-        position={[0.2 * scale, 0.15 * scale, 0.1 * scale]}
-        castShadow
-      >
-        <sphereGeometry args={[0.25 * scale, 6, 5]} />
-        <meshStandardMaterial color="#5a8c5a" roughness={0.65} metalness={0.05} />
-      </mesh>
-    </group>
-  )
-}
-
 /* ── Main component ────────────────────────────────────────────── */
 
 export default function SceneDressing() {
@@ -125,13 +107,6 @@ export default function SceneDressing() {
       {/* Goal approach */}
       <FlagPost position={[-2, 1.5, 127]} flagColor={COLORS.goalGold} height={3} />
       <FlagPost position={[2, 1.5, 127]} flagColor={COLORS.goalGold} height={3} />
-
-      {/* ─── Bushes (meadow section scatter) ─── */}
-      <Bush position={[-3, -0.2, 3]} />
-      <Bush position={[3.5, -0.2, -1]} scale={0.8} />
-      <Bush position={[-2, -0.2, -3]} scale={1.2} />
-      <Bush position={[4, -0.1, 5]} scale={0.7} />
-      <Bush position={[-3.5, -0.2, 22]} scale={0.9} />
 
     </>
   )
