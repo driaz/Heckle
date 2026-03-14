@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { STARS, getAreaName } from '../config/level'
+import { STARS, getAreaName, getAreaInfo } from '../config/level'
 import { eventBus, EventType } from '../systems/events'
 
 const useGameStore = create((set, get) => ({
@@ -35,6 +35,7 @@ const useGameStore = create((set, get) => ({
       const totalCollected = next.size
 
       const starPos = STARS[index]
+      const areaInfo = starPos ? getAreaInfo(starPos) : null
       const event = {
         type: EventType.COLLECT,
         timestamp: now,
@@ -42,7 +43,8 @@ const useGameStore = create((set, get) => ({
         totalCollected,
         totalStars: state.totalStars,
         isLast: totalCollected === state.totalStars,
-        area: starPos ? getAreaName(starPos) : null,
+        area: areaInfo?.name || null,
+        areaDesc: areaInfo?.desc || null,
       }
 
       // Update session memory
@@ -81,12 +83,14 @@ const useGameStore = create((set, get) => ({
         ? (now - state.lastDeathTime) / 1000
         : null
 
-      const area = position ? getAreaName(position) : null
+      const areaInfo = position ? getAreaInfo(position) : null
+      const area = areaInfo?.name || null
       const event = {
         type: EventType.FALL,
         timestamp: now,
         position: position ? [position.x, position.y, position.z] : null,
         area,
+        areaDesc: areaInfo?.desc || null,
         fallCount: newFallCount,
         deathCount: newDeathCount,
         timeSinceLastDeath,
@@ -150,6 +154,7 @@ const useGameStore = create((set, get) => ({
         duration,
         position: position ? [position.x, position.y, position.z] : null,
         area: position ? getAreaName(position) : null,
+        areaDesc: position ? getAreaInfo(position)?.desc : null,
       }
 
       // Update session memory
@@ -192,6 +197,7 @@ const useGameStore = create((set, get) => ({
         hazardName,
         position: position ? [position.x, position.y, position.z] : null,
         area: position ? getAreaName(position) : null,
+        areaDesc: position ? getAreaInfo(position)?.desc : null,
         deathCount: newDeathCount,
         hazardSpecificCount: hazardDeaths[hazardName],
       }

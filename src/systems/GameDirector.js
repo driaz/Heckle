@@ -20,9 +20,12 @@ function buildPrompt(event) {
   // Build memory context — only include what's relevant to THIS event
   let memoryContext = ''
 
+  // Format area name with description for richer narrator context
+  const areaLabel = (name, desc) => desc ? `${name} (${desc})` : name
+
   switch (event.type) {
     case 'fall': {
-      const area = event.area || 'unknown area'
+      const area = areaLabel(event.area || 'unknown area', event.areaDesc)
       if (event.area) {
         const spotCount = mem.troubleSpots[event.area] || 0
         if (spotCount >= 3) {
@@ -42,7 +45,7 @@ function buildPrompt(event) {
     }
 
     case 'collect': {
-      const area = event.area ? ` in ${event.area}` : ''
+      const area = event.area ? ` in ${areaLabel(event.area, event.areaDesc)}` : ''
       if (event.isLast) {
         const deathsItTook = store.deathCount
         return `${baseContext} FINAL STAR${area} — all ${event.totalStars} collected! It took ${deathsItTook} deaths to get here.`
@@ -57,7 +60,7 @@ function buildPrompt(event) {
     }
 
     case 'idle': {
-      const area = event.area ? ` at ${event.area}` : ''
+      const area = event.area ? ` at ${areaLabel(event.area, event.areaDesc)}` : ''
       if (store.deathCount > 5 && event.duration > 10) {
         memoryContext = ` [Player has died ${store.deathCount} times and is now just standing still. Probably frustrated.]`
       }
@@ -75,7 +78,7 @@ function buildPrompt(event) {
     }
 
     case 'hazard_death': {
-      const area = event.area ? ` at ${event.area}` : ''
+      const area = event.area ? ` at ${areaLabel(event.area, event.areaDesc)}` : ''
       if (event.hazardSpecificCount >= 3) {
         memoryContext = ` [NEMESIS: Player has been killed by "${event.hazardName}" ${event.hazardSpecificCount} times now.]`
       }

@@ -102,27 +102,37 @@ export const OBSTACLE_NAMES = {
 
 // ── Area lookup by Z coordinate ──────────────────────────────
 const AREA_ZONES = [
-  { maxZ: 5, name: 'Start Island' },
-  { maxZ: 10, name: 'Approach Platform' },
-  { maxZ: 19, name: 'The Wobbly Bridge' },
-  { maxZ: 23, name: 'Landing Platform' },
-  { maxZ: 31, name: 'Bouncy Meadow' },
-  { maxZ: 41, name: 'Spinning Lily Pads' },
-  { maxZ: 47, name: 'Crystal Gauntlet entrance' },
-  { maxZ: 58, name: 'Vanishing Steps' },
-  { maxZ: 73, name: 'The Gauntlet' },
-  { maxZ: 83, name: 'Pendulum Alley' },
-  { maxZ: 90, name: 'Lava Peaks entrance' },
-  { maxZ: 101, name: 'Conveyor Crush' },
-  { maxZ: 110, name: 'Rising Pillars' },
-  { maxZ: 123, name: 'The Slime Gauntlet' },
-  { maxZ: 128, name: 'Final Approach' },
+  { maxZ: 5, name: 'Start Island', desc: 'A big green platform where the player spawns. Safe and easy.' },
+  { maxZ: 10, name: 'Approach Platform', desc: 'A small static platform. Nothing special.' },
+  { maxZ: 19, name: 'The Wobbly Bridge', desc: 'A yellow bridge that tilts back and forth. Easy to walk off if you don\'t time it.' },
+  { maxZ: 23, name: 'Landing Platform', desc: 'A small static platform after the bridge.' },
+  { maxZ: 31, name: 'Bouncy Meadow', desc: 'Three hot pink bounce pads that launch the player upward. Miss the landing and you fall.' },
+  { maxZ: 41, name: 'Spinning Lily Pads', desc: 'Three rotating green platforms over a gap. They spin in alternating directions.' },
+  { maxZ: 47, name: 'Crystal Gauntlet entrance', desc: 'A purple platform. The calm before the storm.' },
+  { maxZ: 58, name: 'Vanishing Steps', desc: 'Five platforms that appear and disappear on a cycle. Step on the wrong one and there\'s nothing under you.' },
+  { maxZ: 73, name: 'The Gauntlet', desc: 'A narrow blue walkway with three sweeping walls that push you off the sides.' },
+  { maxZ: 83, name: 'Pendulum Alley', desc: 'A narrow walkway with three swinging pendulums with red bobs. Time it wrong and you get knocked off.' },
+  { maxZ: 90, name: 'Lava Peaks entrance', desc: 'A red platform at the start of the final section.' },
+  { maxZ: 101, name: 'Conveyor Crush', desc: 'Three moving conveyor belts that push the player sideways. Each one pushes harder than the last.' },
+  { maxZ: 110, name: 'Rising Pillars', desc: 'Six orange pillars that rise and fall in sequence. Jump across them while they\'re up.' },
+  { maxZ: 123, name: 'The Slime Gauntlet', desc: 'A path guarded by three slime enemies that patrol back and forth. Touch one and you die.' },
+  { maxZ: 128, name: 'Final Approach', desc: 'A yellow platform right before the goal. Almost there.' },
 ]
+
+const GOAL_AREA = { name: 'Goal Area', desc: 'A golden platform with pillars and an arch. The finish line.' }
 
 export function getAreaName(position) {
   const z = Array.isArray(position) ? position[2] : (position?.z ?? 0)
   for (const zone of AREA_ZONES) {
     if (z <= zone.maxZ) return zone.name
   }
-  return 'Goal Area'
+  return GOAL_AREA.name
+}
+
+export function getAreaInfo(position) {
+  const z = Array.isArray(position) ? position[2] : (position?.z ?? 0)
+  for (const zone of AREA_ZONES) {
+    if (z <= zone.maxZ) return { name: zone.name, desc: zone.desc }
+  }
+  return GOAL_AREA
 }
