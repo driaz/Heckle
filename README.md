@@ -2,6 +2,10 @@
 
 A browser-based 3D platformer with a real-time AI narrator that watches you play, roasts your failures, celebrates your wins, and talks back when you trash talk it.
 
+## Demo
+
+[![Heckle Demo](https://img.youtube.com/vi/RHcEM3dn2ro/maxresdefault.jpg)](https://www.youtube.com/watch?v=RHcEM3dn2ro)
+
 ## What is this?
 
 Heckle is a proof of concept exploring AI-driven interactive narration in games. The game itself is a colorful obstacle course (think Fall Guys meets Astro Bot), but the real star is the narrator: an AI character that delivers context-aware, genuinely funny commentary in real time using voice synthesis.
