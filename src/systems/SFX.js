@@ -1,6 +1,6 @@
 let audioContext = null
 let jumpBuffer = null
-let coinBuffer = null
+let chimeBuffer = null
 
 function ensureContext() {
   if (!audioContext) {
@@ -21,13 +21,13 @@ async function loadBuffer(url) {
 
 async function init() {
   try {
-    const [jump, coin] = await Promise.all([
+    const [jump, chime] = await Promise.all([
       loadBuffer('/audio/jump.wav'),
-      loadBuffer('/audio/coin.wav'),
+      loadBuffer('/audio/chime.wav'),
     ])
     jumpBuffer = jump
-    coinBuffer = coin
-    console.log('[SFX] Loaded jump and coin audio')
+    chimeBuffer = chime
+    console.log('[SFX] Loaded jump and chime audio')
   } catch (err) {
     console.error('[SFX] Failed to load audio:', err)
   }
@@ -50,7 +50,7 @@ function playJump() {
 }
 
 function playStarChime() {
-  play(coinBuffer, 0.35)
+  play(chimeBuffer, 0.21)
 }
 
 export default { init, playJump, playStarChime }

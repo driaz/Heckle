@@ -1,4 +1,4 @@
-const VOICE_ID = 'R9RRuF6DvYcB09peYxfT'
+const VOICE_ID = 'E95b3lkMWHDsKeHJaIcY'
 const MODEL_ID = 'eleven_flash_v2_5'
 const WS_URL = `wss://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/stream-input?model_id=${MODEL_ID}&output_format=pcm_24000`
 
