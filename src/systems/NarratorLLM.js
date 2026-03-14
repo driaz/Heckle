@@ -26,7 +26,7 @@ async function* generate(prompt, systemPrompt) {
 
 async function* generateClaude(prompt, systemPrompt) {
   const stream = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6-20250218',
+    model: 'claude-sonnet-4-6',
     max_tokens: 150,
     temperature: 1.0,
     system: systemPrompt,
