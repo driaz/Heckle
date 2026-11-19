@@ -7,10 +7,12 @@ export const EventType = {
   ENEMY_KILL: 'enemy_kill',
   HAZARD_DEATH: 'hazard_death',
   GOAL_REACHED: 'goal_reached',
+  CHECKPOINT: 'checkpoint',
 }
 
 const PRIORITY = {
   [EventType.GOAL_REACHED]: 5,
+  [EventType.CHECKPOINT]: 4,
   [EventType.HAZARD_DEATH]: 4,
   [EventType.ENEMY_KILL]: 3,
   [EventType.FALL]: 3,

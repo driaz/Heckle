@@ -1,4 +1,4 @@
-import { Suspense, useRef } from 'react'
+import { Suspense, lazy, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { KeyboardControls, useGLTF } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
@@ -10,17 +10,25 @@ import ObstacleCourse from './components/ObstacleCourse'
 import SceneDressing from './components/SceneDressing'
 import Stars from './components/Stars'
 import FallDetector from './components/FallDetector'
+import CheckpointDetector from './components/CheckpointDetector'
 import CharacterModel from './components/CharacterModel'
 import PostProcessing from './components/PostProcessing'
 import HUD from './components/HUD'
 import GamepadController from './systems/GamepadController'
 import AudioManager from './systems/AudioManager'
 import IdleDetector from './systems/IdleDetector'
-import GameDirectorManager from './systems/GameDirectorManager'
+import NarratorOverlay from './components/NarratorOverlay'
+import liveKitNarrator from './systems/LiveKitNarrator'
+import { NARRATOR } from './config/narrator'
 import JumpSFX from './systems/JumpSFX'
 import SFX from './systems/SFX'
 
 SFX.init()
+
+// v2 connects at page load so the avatar is ready by the time the player clicks start.
+// v1 is loaded on demand so its browser-side API clients only exist when it is in use.
+if (NARRATOR === 'livekit') liveKitNarrator.start()
+const V1Narrator = lazy(() => import('./systems/V1Narrator'))
 
 const animationSet = {
   idle: 'Idle',
@@ -90,6 +98,7 @@ function App() {
             <Player />
             <Stars />
             <FallDetector />
+            <CheckpointDetector />
             <IdleDetector />
             <JumpSFX />
             <Atmosphere />
@@ -100,7 +109,13 @@ function App() {
       </Canvas>
       <HUD />
       <AudioManager />
-      <GameDirectorManager />
+      {NARRATOR === 'v1' ? (
+        <Suspense fallback={null}>
+          <V1Narrator />
+        </Suspense>
+      ) : (
+        <NarratorOverlay />
+      )}
     </KeyboardControls>
   )
 }
