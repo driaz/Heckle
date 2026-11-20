@@ -9,8 +9,9 @@ import useGameStore from '../stores/gameStore'
  * over a data channel, and receives the avatar's video and voice.
  *
  * The agent decides what to say and never talks over itself (it merges or drops events that
- * arrive while it is busy), so this side just reports what happened. Nothing is published
- * except data: the token has no permission for mic or camera.
+ * arrive while it is busy), so this side just reports what happened. The player's mic is
+ * published too, once they start the game and allow it, so they can talk back.
+ * The agent ignores the mic while the narrator is speaking.
  *
  * One avatar session lasts under 5 minutes (a Runway limit). When it ends, the agent leaves and
  * we join a fresh room for a new session, but only while someone is actually playing.
@@ -27,7 +28,13 @@ const RAPID_DEATH_S = 5
 const FIRST_STALL_S = 20          // then each report needs double the previous duration
 
 // status: 'off' | 'connecting' | 'live' | 'resting' (between sessions) | 'failed'
-export const useNarratorStore = create(() => ({ status: 'off', videoTrack: null, speaking: false }))
+// mic: 'off' | 'on' | 'blocked' (no permission or no device)
+export const useNarratorStore = create(() => ({
+  status: 'off',
+  videoTrack: null,
+  speaking: false,
+  mic: 'off',
+}))
 const setState = (patch) => useNarratorStore.setState(patch)
 
 let room = null
@@ -36,6 +43,7 @@ let failures = 0
 let avatarTimer = null
 let renewTimer = null
 let stopListening = null
+let micWanted = true      // the player's choice; kept across sessions
 
 // ── Session lifecycle ─────────────────────────────────────────
 
@@ -77,7 +85,10 @@ async function connect() {
 
     await r.connect(url, token)
     if (gen !== generation) return r.disconnect()
-    if (useGameStore.getState().started) r.startAudio().catch(() => {})
+    if (useGameStore.getState().started) {
+      r.startAudio().catch(() => {})
+      applyMic()
+    }
     avatarTimer = setTimeout(() => end('no avatar video'), AVATAR_TIMEOUT_MS)
   } catch (err) {
     console.warn('[LiveKitNarrator] Could not connect:', err.message)
@@ -127,6 +138,24 @@ function renewIfPlaying() {
     document.visibilityState === 'visible' &&
     Date.now() - lastIdleAt > AWAY_AFTER_IDLE_MS
   if (retrying || playing) connect()
+}
+
+// The mic only opens after the start click, so the permission prompt follows a user gesture.
+async function applyMic() {
+  const r = room
+  if (!r || !useGameStore.getState().started) return
+  try {
+    await r.localParticipant.setMicrophoneEnabled(micWanted)
+    if (r === room) setState({ mic: micWanted ? 'on' : 'off' })
+  } catch (err) {
+    console.warn('[LiveKitNarrator] Mic unavailable:', err.message)
+    setState({ mic: 'blocked' })
+  }
+}
+
+function toggleMic() {
+  micWanted = useNarratorStore.getState().mic !== 'on'
+  return applyMic()
 }
 
 function setSpeaking(speaking) {
@@ -216,6 +245,7 @@ function start() {
   const offStore = useGameStore.subscribe((state, prev) => {
     if (state.started && !prev.started) {
       room?.startAudio().catch(() => {})
+      applyMic()
       renewIfPlaying()
     }
   })
@@ -241,4 +271,4 @@ function stop() {
 
 if (import.meta.hot) import.meta.hot.dispose(stop)
 
-export default { start, stop }
+export default { start, stop, toggleMic }

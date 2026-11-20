@@ -102,10 +102,10 @@ a Runway avatar. Its code and deploy steps are in
 same LiveKit project as the keys above.
 
 ```
-Game events (death, stall, checkpoint, finish)
-    |  short JSON over a LiveKit data channel
-    v
-Narrator agent (LiveKit Cloud): Claude -> ElevenLabs -> Runway avatar
+Game events (death, stall, checkpoint, finish)   Player mic
+    |  short JSON over a LiveKit data channel       |  audio track
+    v                                               v
+Narrator agent (LiveKit Cloud): ElevenLabs STT -> Claude -> ElevenLabs TTS -> Runway avatar
     |  avatar video + voice
     v
 Corner overlay in the game
@@ -118,7 +118,9 @@ Corner overlay in the game
   last one), stalls of 20 seconds or more, checkpoints, and the finish.
 - The agent answers one thing at a time. Events that arrive while it is talking are merged into
   its next line or dropped if they have gone stale.
-- No mic and no speech-to-text: the token cannot publish audio or video.
+- You can talk back. Clicking start asks for the mic; the agent transcribes what you say and
+  answers it. It ignores the mic while the narrator is speaking, so wait for it to finish. The
+  mic button on the avatar's corner mutes and unmutes. The token allows the mic and nothing else.
 - A Runway session lasts under 5 minutes. When it ends the avatar disappears for about 10 seconds
   while the game joins a fresh room; it only does that while someone is playing.
 - The token endpoint is part of the Vite dev and preview servers (`server/livekitToken.js`). A
@@ -134,7 +136,7 @@ the mic.
 |-------|--------|
 | WASD / Left Stick | Move |
 | Space / A Button | Jump |
-| Mic (browser permission) | Talk to the narrator (v1 only) |
+| Mic (browser permission) | Talk to the narrator |
 
 ## Key Design Decisions
 

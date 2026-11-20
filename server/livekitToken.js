@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { AccessToken } from 'livekit-server-sdk'
+import { AccessToken, TrackSource } from 'livekit-server-sdk'
 import { getLevelGuide } from '../src/config/level.js'
 
 const PATH = '/api/livekit-token'
@@ -29,12 +29,13 @@ export default function livekitToken(env) {
       ttl: '10m', // time allowed to join, not the session length
       metadata: getLevelGuide(), // the narrator reads the level description from here
     })
-    // Watch and send events only: no mic or camera can be published with this token.
+    // Watch, send events, and publish the mic so the narrator can hear the player. Nothing else.
     token.addGrant({
       room: `heckle-${id}`,
       roomJoin: true,
       canSubscribe: true,
-      canPublish: false,
+      canPublish: true,
+      canPublishSources: [TrackSource.MICROPHONE],
       canPublishData: true,
     })
     res.end(JSON.stringify({ url: LIVEKIT_URL, token: await token.toJwt() }))
