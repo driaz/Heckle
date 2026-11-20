@@ -3,7 +3,7 @@ import liveKitNarrator, { useNarratorStore } from '../systems/LiveKitNarrator'
 import useGameStore from '../stores/gameStore'
 
 /**
- * The narrator's avatar, bottom-right, with a mic button on its corner.
+ * The narrator's avatar, top-right, with a mic button on its corner.
  * Hidden whenever there is no video to show.
  */
 export default function NarratorOverlay() {
@@ -25,7 +25,7 @@ export default function NarratorOverlay() {
       style={{
         position: 'fixed',
         right: 16,
-        bottom: 16,
+        top: 16,
         width: 'min(220px, 30vw)',
         zIndex: 20,
         opacity: videoTrack ? 1 : 0,
@@ -68,7 +68,7 @@ export default function NarratorOverlay() {
           }
           style={{
             position: 'absolute',
-            top: -14,
+            bottom: -14,
             left: -14,
             width: 40,
             height: 40,
