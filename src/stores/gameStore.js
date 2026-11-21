@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { STARS, getAreaName, getAreaInfo } from '../config/level'
+import { STARS, CHECKPOINTS, getAreaName, getAreaInfo } from '../config/level'
 import { eventBus, EventType } from '../systems/events'
 
 const useGameStore = create((set, get) => ({
@@ -9,6 +9,9 @@ const useGameStore = create((set, get) => ({
   deathCount: 0,
   lastDeathTime: null,
   sessionStart: Date.now(),
+  started: false, // true once the player dismisses the start overlay
+  startGame: () => set((state) => (state.started ? state : { started: true, sessionStart: Date.now() })),
+  checkpointsReached: new Set([0]),
   events: [],
   micActive: false,
   setMicActive: (val) => set({ micActive: val }),
@@ -254,6 +257,25 @@ const useGameStore = create((set, get) => ({
       eventBus.emit(event)
       console.log('[EVENT]', event)
       return { goalReached: true, events: [...state.events, event] }
+    }),
+
+  recordCheckpoint: (index) =>
+    set((state) => {
+      if (state.checkpointsReached.has(index)) return state
+      const checkpointsReached = new Set(state.checkpointsReached)
+      checkpointsReached.add(index)
+
+      const event = {
+        type: EventType.CHECKPOINT,
+        timestamp: Date.now(),
+        name: CHECKPOINTS[index].name,
+        deathCount: state.deathCount,
+        sessionTime: Math.floor((Date.now() - state.sessionStart) / 1000),
+      }
+
+      eventBus.emit(event)
+      console.log('[EVENT]', event)
+      return { checkpointsReached, events: [...state.events, event] }
     }),
 
   consumeEvents: () => {

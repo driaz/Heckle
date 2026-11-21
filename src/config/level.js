@@ -82,9 +82,9 @@ export const RESPAWN_HEIGHT = -10
 export const SPAWN_POINT = [0, 2, 0]
 
 export const CHECKPOINTS = [
-  { z: 0, spawn: [0, 2, 0] },
-  { z: 42, spawn: [0, 2.5, 42] },
-  { z: 86, spawn: [0, 2.5, 86] },
+  { z: 0, spawn: [0, 2, 0], name: 'Start' },
+  { z: 42, spawn: [0, 2.5, 42], name: 'Crystal Gauntlet' },
+  { z: 86, spawn: [0, 2.5, 86], name: 'Lava Peaks' },
 ]
 
 // ── Obstacle Names (for narrator) ─────────────────────────────
@@ -135,4 +135,9 @@ export function getAreaInfo(position) {
     if (z <= zone.maxZ) return { name: zone.name, desc: zone.desc }
   }
   return GOAL_AREA
+}
+
+// The whole course as text, one area per line, for the narrator's instructions
+export function getLevelGuide() {
+  return [...AREA_ZONES, GOAL_AREA].map((zone) => `${zone.name}: ${zone.desc}`).join('\n')
 }

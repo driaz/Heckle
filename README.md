@@ -75,18 +75,60 @@ npm install
 Create a `.env` file in the project root:
 
 ```
+LIVEKIT_URL=wss://your-project.livekit.cloud
+LIVEKIT_API_KEY=your_key_here
+LIVEKIT_API_SECRET=your_secret_here
 VITE_ANTHROPIC_API_KEY=your_key_here
 VITE_GEMINI_API_KEY=your_key_here
 VITE_ELEVENLABS_API_KEY=your_key_here
 ```
 
-You need at least one LLM key (Anthropic or Google) and an ElevenLabs key for voice.
+The `LIVEKIT_*` values are for the v2 narrator (the default). They are read by the dev server only
+and never reach the browser. The `VITE_*` keys are for the v1 narrator; they are bundled into the
+page, so only use them locally. v1 needs at least one LLM key (Anthropic or Google) and an
+ElevenLabs key.
 
 ```bash
 npm run dev
 ```
 
 Open http://localhost:5173 in Chrome. Gamepad supported (tested with DualShock 4).
+
+## Narrator v2 (LiveKit avatar)
+
+The default narrator is an agent running on LiveKit Cloud: Claude Opus 5.5, ElevenLabs v4 Turbo and
+a Runway avatar. Its code and deploy steps are in
+[Heckle-LiveKit-Test](https://github.com/driaz/Heckle-LiveKit-Test); it must be deployed to the
+same LiveKit project as the keys above.
+
+```
+Game events (death, stall, checkpoint, finish)   Player mic
+    |  short JSON over a LiveKit data channel       |  audio track
+    v                                               v
+Narrator agent (LiveKit Cloud): ElevenLabs STT -> Claude -> ElevenLabs TTS -> Runway avatar
+    |  avatar video + voice
+    v
+Corner overlay in the game
+```
+
+- On page load the game asks the dev server's `POST /api/livekit-token` for a token and joins a
+  new room. The agent joins and starts the avatar, which takes about 6 seconds, so the start
+  overlay reads "Waking the narrator…" until the avatar is on screen (12 seconds at most).
+- The game sends deaths (with cause, the count at that spot, and whether it came right after the
+  last one), stalls of 20 seconds or more, checkpoints, and the finish.
+- The agent answers one thing at a time. Events that arrive while it is talking are merged into
+  its next line or dropped if they have gone stale.
+- You can talk back. Clicking start asks for the mic; the agent transcribes what you say and
+  answers it. It ignores the mic while the narrator is speaking, so wait for it to finish. The
+  mic button on the avatar's corner mutes and unmutes. The token allows the mic and nothing else.
+- A Runway session lasts under 5 minutes. When it ends the avatar disappears for about 10 seconds
+  while the game joins a fresh room; it only does that while someone is playing.
+- The token endpoint is part of the Vite dev and preview servers (`server/livekitToken.js`). A
+  static deploy of `dist/` has no endpoint, and the game then runs without a narrator.
+
+To compare with the original narrator, open `http://localhost:5173/?narrator=v1`, or set
+`VITE_NARRATOR=v1` in `.env`. v1 is unchanged: LLM and ElevenLabs called from the browser, plus
+the mic.
 
 ## Controls
 
@@ -127,11 +169,16 @@ src/
     NarratorTTS.js   # ElevenLabs WebSocket TTS
     NarratorSTT.js   # Web Speech API voice input
     NarratorPipeline.js  # Orchestrates LLM + TTS + STT
+    V1Narrator.jsx   # Everything v1, loaded only with the v1 flag
+    LiveKitNarrator.js   # v2: LiveKit room, game events out, avatar in
     events.js        # Event bus
   stores/
     gameStore.js     # Zustand store (game state, session memory)
   config/
     level.js         # Level layout, obstacle names, area descriptions
+    narrator.js      # Which narrator runs (v2 by default, v1 by flag)
+server/
+  livekitToken.js    # Token endpoint for the dev and preview servers
 ```
 
 ## Credits

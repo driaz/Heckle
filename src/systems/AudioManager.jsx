@@ -1,21 +1,35 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import narratorPipeline from './NarratorPipeline'
+import narratorSpeech from './narratorSpeech'
+import { useNarratorStore } from './LiveKitNarrator'
+import useGameStore from '../stores/gameStore'
+import { NARRATOR } from '../config/narrator'
 
 const MUSIC_URL = '/audio/Sunny Steps.mp3'
 const MUSIC_VOLUME = 0.3
 const DUCK_VOLUME = 0.05
 const DUCK_DOWN_MS = 400
 const DUCK_UP_MS = 800
+// Longest the start overlay waits for the v2 narrator's avatar before letting the player in
+const NARRATOR_WAIT_MS = 12000
 
 /**
  * Handles all game audio. Renders a "click to start" overlay until the
  * first user gesture (click / keypress / gamepad), then starts looping
- * background music. Sits outside <Canvas> — pure HTML5 Audio.
+ * background music. With the v2 narrator the overlay also covers the
+ * avatar's startup: it accepts the gesture once the avatar is on screen. Sits outside <Canvas> — pure HTML5 Audio.
  */
 export default function AudioManager() {
   const musicRef = useRef(null)
   const fadeRef = useRef(null)
   const [started, setStarted] = useState(false)
+
+  const narratorStatus = useNarratorStore((s) => s.status)
+  const [waitedEnough, setWaitedEnough] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => setWaitedEnough(true), NARRATOR_WAIT_MS)
+    return () => clearTimeout(timer)
+  }, [])
+  const ready = NARRATOR !== 'livekit' || waitedEnough || narratorStatus !== 'connecting'
 
   // Create the Audio element once
   useEffect(() => {
@@ -64,20 +78,21 @@ export default function AudioManager() {
     const onStart = () => fadeMusic(DUCK_VOLUME, DUCK_DOWN_MS)
     const onEnd = () => fadeMusic(MUSIC_VOLUME, DUCK_UP_MS)
 
-    narratorPipeline.onSpeechStart(onStart)
-    narratorPipeline.onSpeechEnd(onEnd)
+    const offStart = narratorSpeech.onStart(onStart)
+    const offEnd = narratorSpeech.onEnd(onEnd)
 
     return () => {
-      narratorPipeline.offSpeechStart(onStart)
-      narratorPipeline.offSpeechEnd(onEnd)
+      offStart()
+      offEnd()
       if (fadeRef.current) cancelAnimationFrame(fadeRef.current)
     }
   }, [])
 
   // Start playback on first user gesture
   const startAudio = useCallback(() => {
-    if (started) return
+    if (started || !ready) return
     setStarted(true)
+    useGameStore.getState().startGame()
 
     const music = musicRef.current
     if (music) {
@@ -87,11 +102,11 @@ export default function AudioManager() {
         // user will click/tap again naturally.
       })
     }
-  }, [started])
+  }, [started, ready])
 
   // Listen for any user gesture (click, key, gamepad)
   useEffect(() => {
-    if (started) return
+    if (started || !ready) return
 
     const handler = () => startAudio()
 
@@ -109,7 +124,7 @@ export default function AudioManager() {
       window.removeEventListener('pointerdown', handler)
       window.removeEventListener('gamepadconnected', handler)
     }
-  }, [started, startAudio])
+  }, [started, ready, startAudio])
 
   // "Click to start" overlay — dismissed on first interaction
   if (started) return null
@@ -125,7 +140,7 @@ export default function AudioManager() {
         justifyContent: 'center',
         zIndex: 100,
         pointerEvents: 'auto',
-        cursor: 'pointer',
+        cursor: ready ? 'pointer' : 'progress',
       }}
     >
       <div
@@ -142,7 +157,7 @@ export default function AudioManager() {
           userSelect: 'none',
         }}
       >
-        Click to start
+        {ready ? 'Click to start' : 'Waking the narrator…'}
       </div>
     </div>
   )
